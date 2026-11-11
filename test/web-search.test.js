@@ -8,7 +8,7 @@ test.afterEach(() => {
   globalThis.fetch = originalFetch;
 });
 
-test("searchWeb sends a Tavily request and normalizes results", async () => {
+test("searchWeb sends a Japanese-region Tavily request and normalizes results", async () => {
   let request;
   globalThis.fetch = async (url, options) => {
     request = { url: String(url), options };
@@ -34,7 +34,8 @@ test("searchWeb sends a Tavily request and normalizes results", async () => {
     search_depth: "basic",
     max_results: 5,
     include_answer: false,
-    include_raw_content: false
+    include_raw_content: false,
+    country: "Japan"
   });
   assert.equal(result.results.length, 2);
   assert.equal(result.results[0].title, "日本語のページ");
@@ -42,11 +43,24 @@ test("searchWeb sends a Tavily request and normalizes results", async () => {
   assert.equal(result.results[0].url, "https://example.jp/");
 });
 
-test("searchWeb rejects missing API keys", async () => {
-  await assert.rejects(
-    searchWeb({ query: "test" }, { env: {} }),
-    /TAVILY_API_KEY is not configured/
+test("searchWeb uses the injected keyless client without requiring a key", async () => {
+  let received;
+  const result = await searchWeb(
+    { query: "multilingual search" },
+    {
+      language: "en",
+      tavilyClient: {
+        search: async (query, options) => {
+          received = { query, options };
+          return { results: [{ title: "Example", content: "Snippet", url: "https://example.com" }] };
+        }
+      }
+    }
   );
+
+  assert.equal(received.query, "multilingual search");
+  assert.equal(received.options.country, "United States");
+  assert.equal(result.results[0].url, "https://example.com");
 });
 
 test("searchWeb validates query length and emptiness", async () => {
