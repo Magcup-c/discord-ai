@@ -28,7 +28,9 @@ export async function handleInteraction(request, env, ctx) {
     });
   }
 
-  const commandName = interaction.data?.name;\n  const isPrivateCommand = ["connect", "connections", "disconnect"].includes(commandName);\n  const response = createDeferredResponse({ ephemeral: isPrivateCommand });
+  const commandName = interaction.data?.name;
+  const isPrivateCommand = ["connect", "connections", "disconnect"].includes(commandName);
+  const response = createDeferredResponse({ ephemeral: isPrivateCommand });
   const task = handleApplicationCommand(interaction, env)
     .then(content => editOriginalResponse(interaction, content))
     .catch(async error => {
