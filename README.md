@@ -40,7 +40,8 @@ Cloudflare Workers 上で動作する、Groq / OpenAI 互換 API 対応の拡張
 - Cloudflare アカウントと Wrangler
 - Discord Application / Bot
 - Groq API キー（または利用する OpenAI 互換 API のキー）
-- Web検索はTavilyのキー不要モード（共有レート制限あり）で試せます。専用枠を使う場合のみTAVILY_API_KEYを登録します。\n- 天気機能を使う場合は OpenWeatherMap API キー
+- Web検索はTavilyのキー不要モード（共有レート制限あり）で試せます。専用枠を使う場合のみTAVILY_API_KEYを登録します。
+- 天気機能を使う場合は OpenWeatherMap API キー
 
 ## セットアップ
 
@@ -71,7 +72,8 @@ Cloudflare Workers 上で動作する、Groq / OpenAI 互換 API 対応の拡張
    ```bash
    npx wrangler secret put DISCORD_PUBLIC_KEY
    npx wrangler secret put GROQ_API_KEY
-   npx wrangler secret put WEATHER_API_KEY\n   npx wrangler secret put TAVILY_API_KEY
+   npx wrangler secret put WEATHER_API_KEY
+   npx wrangler secret put TAVILY_API_KEY
    ```
 
    `DISCORD_PUBLIC_KEY` は Discord Developer Portal の Application Public Key です。`WEATHER_API_KEY` は天気機能を使う場合のみ必要です。
@@ -111,7 +113,13 @@ npx wrangler dev
 
 ローカル開発では `.dev.vars` を使って Secret を指定できますが、必ず Git 管理対象外にしてください。
 
-## Web検索の設定\n\n`TAVILY_API_KEY` を Cloudflare Worker Secret に登録すると、`/search` と AI の `web_search` ツールでTavilyを利用します。個人設定の言語はAIへの応答言語として使われます。検索結果の言語・地域は検索語や検索プロバイダー側の判定にも依存します。\n\n外部サービスの個人アカウント連携方針とOAuth設計は [docs/integrations-roadmap.md](docs/integrations-roadmap.md) を参照してください。OAuth連携自体は別フェーズです。\n\n## ツールの追加
+## Web検索の設定
+
+`TAVILY_API_KEY` を Cloudflare Worker Secret に登録すると、`/search` と AI の `web_search` ツールでTavilyを利用します。個人設定の言語はAIへの応答言語として使われます。検索結果の言語・地域は検索語や検索プロバイダー側の判定にも依存します。
+
+外部サービスの個人アカウント連携方針とOAuth設計は [docs/integrations-roadmap.md](docs/integrations-roadmap.md) を参照してください。OAuth連携自体は別フェーズです。
+
+## ツールの追加
 
 1. `src/tools/` にツール実装を追加します。
 2. `src/tools/index.js` で `registerTool(definition, handler)` を呼びます。
