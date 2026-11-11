@@ -1,0 +1,16 @@
+name = "discord-ai"
+main = "src/index.js"
+compatibility_date = "2026-11-11"
+compatibility_flags = ["nodejs_compat"]
+
+# Create the database with:
+# npx wrangler d1 create discord-ai-db
+# Then replace the placeholder database_id below with the returned ID.
+[[d1_databases]]
+binding = "DB"
+database_name = "discord-ai-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+migrations_dir = "src/database/migrations"
+
+[vars]
+GROQ_MODEL = "openai/gpt-oss-20b"
