@@ -15,6 +15,28 @@ const choiceOption = (name, description, choices, required = true) => ({
 
 const commands = [
   {
+    name: "connect",
+    description: "外部サービスの個人アカウントを連携します",
+    options: [
+      choiceOption("provider", "連携するサービス", [
+        { name: "Google", value: "google" }
+      ])
+    ]
+  },
+  {
+    name: "connections",
+    description: "自分の外部サービス連携状況を確認します"
+  },
+  {
+    name: "disconnect",
+    description: "外部サービスとの個人連携を解除します",
+    options: [
+      choiceOption("provider", "切断するサービス", [
+        { name: "Google", value: "google" }
+      ])
+    ]
+  },
+  {
     name: "ask",
     description: "AIアシスタントに質問します",
     options: [stringOption("prompt", "質問や依頼", true, { max_length: 1500 })]
