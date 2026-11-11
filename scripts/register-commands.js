@@ -39,7 +39,10 @@ const commands = [
   {
     name: "ask",
     description: "AIアシスタントに質問します",
-    options: [stringOption("prompt", "質問や依頼", true, { max_length: 1500 })]
+    options: [
+      stringOption("prompt", "質問や依頼", true, { max_length: 1500 }),
+      { type: 11, name: "image", description: "解析する画像（JPEG・PNG・WebP、10MB以下）", required: false }
+    ]
   },
   { name: "forget", description: "このチャンネルで自分の会話履歴を削除します" },
   {

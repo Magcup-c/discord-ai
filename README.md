@@ -5,7 +5,7 @@ Cloudflare Workers 上で動作する、Groq / OpenAI 互換 API 対応の拡張
 ## 主な機能
 
 - Discord Interactions の Ed25519 署名検証（署名・タイムスタンプを確認）
-- `/ask` AIアシスタントとの会話（D1の履歴を利用）
+- `/ask` AIアシスタントとの会話（D1の履歴を利用、JPEG・PNG・WebP画像の解析にも対応）
 - `/forget` 現在のチャンネルに保存された自分の会話履歴を削除
 - `/memory` 明示的に追加した記憶の確認・追加・削除
 - `/tools` 利用可能なツールの一覧表示
@@ -20,7 +20,7 @@ Cloudflare Workers 上で動作する、Groq / OpenAI 互換 API 対応の拡張
 
 | コマンド | 説明 |
 | --- | --- |
-| `/ask prompt:` | AIに質問 |
+| `/ask prompt: image:` | AIに質問（画像は任意） |
 | `/forget` | 現在のチャンネルの自分の会話履歴を削除（記憶は削除しない） |
 | `/memory action:view` | 記憶を確認 |
 | `/memory action:add key: value:` | 記憶を明示的に保存 |
@@ -76,6 +76,8 @@ Cloudflare Workers 上で動作する、Groq / OpenAI 互換 API 対応の拡張
    npx wrangler secret put TAVILY_API_KEY
    ```
 
+   画像解析では、Groq の `GROQ_VISION_MODEL`（既定値：`qwen/qwen3.8-27b`）を使用します。通常のテキスト会話で使う `GROQ_MODEL` とは別設定です。OpenAI互換APIでは `OPENAI_COMPATIBLE_VISION_MODEL` を指定できます。接続先のモデルが画像入力に対応していることを確認してください。
+
    `DISCORD_PUBLIC_KEY` は Discord Developer Portal の Application Public Key です。`WEATHER_API_KEY` は天気機能を使う場合のみ必要です。
 
    OpenAI 互換 API を使う場合は、`OPENAI_COMPATIBLE_API_KEY` を Secret として登録し、`wrangler.toml` の `[vars]` に次を設定します。
@@ -112,6 +114,12 @@ npx wrangler dev
 ```
 
 ローカル開発では `.dev.vars` を使って Secret を指定できますが、必ず Git 管理対象外にしてください。
+
+## 画像解析
+
+`/ask prompt:画像について説明して image:[画像]` のように、質問と画像を一緒に指定できます。対応形式はJPEG・PNG・WebP、最大サイズは10MBです。画像データはD1やR2に保存せず、Discord CDNの添付URLをVision対応モデルに渡して、そのリクエスト内で解析します。会話履歴には画像本体を保存しないため、後続の会話で同じ画像を参照したい場合は再添付してください。
+
+Groqを使う場合、既定の画像モデルは `qwen/qwen3.8-27b` です。必要に応じてCloudflare Workerの変数 `GROQ_VISION_MODEL` で変更できます。OpenAI互換APIの場合は `OPENAI_COMPATIBLE_VISION_MODEL` を設定してください。画像入力に対応していないモデルを指定すると解析に失敗します。
 
 ## Web検索の設定
 

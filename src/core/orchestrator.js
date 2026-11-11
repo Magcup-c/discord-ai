@@ -6,13 +6,13 @@ const MAX_TOOL_ROUNDS = 4;
 const MAX_TOOL_CALLS = 6;
 
 async function callAndTrack({ env, messages, tools, context }) {
-  const response = await callLLM({ env, messages, tools });
+  const response = await callLLM({ env, messages, tools, model: context.model });
   if (context.userId && env.DB) {
     const usage = response.usage || {};
     await recordUsage(env.DB, {
       userId: context.userId,
       provider: (env.LLM_PROVIDER || "groq").toLowerCase(),
-      model: response.model || env.GROQ_MODEL || env.OPENAI_COMPATIBLE_MODEL || "unknown",
+      model: response.model || context.model || env.GROQ_MODEL || env.OPENAI_COMPATIBLE_MODEL || "unknown",
       promptTokens: usage.prompt_tokens ?? usage.input_tokens ?? 0,
       completionTokens: usage.completion_tokens ?? usage.output_tokens ?? 0
     });
