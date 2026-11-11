@@ -1,7 +1,7 @@
 export function createDeferredResponse() {
   return Response.json({
     type: 5,
-    data: { flags: 64 }
+    data: { }
   });
 }
 
