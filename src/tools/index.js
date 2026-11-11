@@ -1,7 +1,8 @@
 import { registerTool } from "../core/tool-registry.js";
 import { getWeather } from "./weather.js";
 import { searchWeb } from "./web-search.js";
-import { calculate } from "./calculator.js";\nimport { googleSearch } from "./google-search.js";
+import { calculate } from "./calculator.js";
+import { googleSearch } from "./google-search.js";
 
 registerTool({
   type: "function",
@@ -50,7 +51,6 @@ registerTool({
     }
   }
 }, calculate);
-
 
 registerTool({
   type: "function",
