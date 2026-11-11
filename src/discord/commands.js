@@ -48,7 +48,7 @@ export async function handleApplicationCommand(interaction, env) {
         authorizationUrl,
         "",
         "連携を開始した覚えがない場合は、このリンクを開かないでください。"
-      ].join("\\n");
+      ].join("\n");
     } catch (error) {
       console.error("Could not start Google OAuth:", error);
       return "Google連携を開始できませんでした。管理者によるOAuth設定とD1 migrationを確認してください。";
@@ -63,7 +63,7 @@ export async function handleApplicationCommand(interaction, env) {
       ...connections.map(item => `• **${item.provider}**${item.email ? ` — ${item.email}` : ""}`),
       "",
       "切断する場合は /disconnect provider:google を使用してください。"
-    ].join("\\n");
+    ].join("\n");
   }
 
   if (command === "disconnect") {
