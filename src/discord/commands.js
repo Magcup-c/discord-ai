@@ -71,7 +71,7 @@ export async function handleApplicationCommand(interaction, env) {
     const answer = await runAgent({
       env,
       messages,
-      context: { env, userId, channelId, allowedTools: ALLOWED_TOOLS }
+      context: { env, userId, channelId, language: settings.language, allowedTools: ALLOWED_TOOLS }
     });
     await saveMessage(env.DB, userId, channelId, "user", prompt.trim(), guildId);
     await saveMessage(env.DB, userId, channelId, "assistant", answer, guildId);
@@ -119,7 +119,11 @@ export async function handleApplicationCommand(interaction, env) {
     const query = option(interaction, "query");
     if (typeof query !== "string" || !query.trim()) return "検索キーワードを入力してください。";
     try {
-      const result = await searchWeb({ query: query.trim() });
+      const settings = await getUserSettings(env.DB, userId);
+      const result = await searchWeb(
+        { query: query.trim() },
+        { env, language: settings.language }
+      );
       if (!result.results.length) return result.note || "検索結果が見つかりませんでした。";
       return [
         `**検索結果：${query.trim()}**`,
@@ -129,7 +133,7 @@ export async function handleApplicationCommand(interaction, env) {
       ].join("\n\n").slice(0, 1900);
     } catch (error) {
       console.error("Web search failed:", error);
-      return "Web検索に失敗しました。時間をおいて再度お試しください。";
+      return "Web検索に失敗しました。検索APIキーの設定と利用上限を確認してください。";
     }
   }
 
