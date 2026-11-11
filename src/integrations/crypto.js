@@ -3,7 +3,7 @@ const encoder = new TextEncoder();
 function toBase64Url(bytes) {
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=+$/g, "");
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
 function fromBase64(value) {
@@ -21,8 +21,7 @@ async function encryptionKey(env) {
 }
 
 export function randomBase64Url(byteLength = 32) {
-  const bytes = crypto.getRandomValues(new Uint8Array(byteLength));
-  return toBase64Url(bytes);
+  return toBase64Url(crypto.getRandomValues(new Uint8Array(byteLength)));
 }
 
 export async function sha256Hex(value) {
@@ -39,11 +38,7 @@ export async function encryptSecret(value, env) {
   if (typeof value !== "string" || !value) return null;
   const key = await encryptionKey(env);
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ciphertext = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv },
-    key,
-    encoder.encode(value)
-  );
+  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoder.encode(value));
   return `${toBase64Url(iv)}.${toBase64Url(new Uint8Array(ciphertext))}`;
 }
 
@@ -60,10 +55,6 @@ export async function decryptSecret(payload, env) {
   const iv = decode(ivPart);
   if (iv.length !== 12) throw new Error("Invalid encrypted secret IV");
   const key = await encryptionKey(env);
-  const plaintext = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv },
-    key,
-    decode(ciphertextPart)
-  );
+  const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, decode(ciphertextPart));
   return new TextDecoder().decode(plaintext);
 }
