@@ -1,6 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { encryptSecret, decryptSecret, randomBase64Url, sha256Hex, pkceChallenge } from "../src/integrations/crypto.js";
+import { createGoogleAuthorizationUrl, handleGoogleOAuthCallback, getGoogleAccessToken, searchGoogleData } from "../src/integrations/google-oauth.js";
+import { handleApplicationCommand } from "../src/discord/commands.js";
+import { handleInteraction } from "../src/discord/interactions.js";
+import { createDeferredResponse } from "../src/discord/responses.js";
+import "../src/tools/index.js";
 
 const env = { OAUTH_TOKEN_ENCRYPTION_KEY: "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=" };
 
