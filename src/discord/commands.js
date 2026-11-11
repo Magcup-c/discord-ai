@@ -1,10 +1,24 @@
 import { runAgent } from "../core/orchestrator.js";
-import { loadRecentMessages, saveMessage } from "../database/conversations.js";
+import {
+  loadRecentMessages,
+  saveMessage,
+  deleteConversation
+} from "../database/conversations.js";
 
 const MAX_PROMPT_LENGTH = 1500;
 
 export async function handleApplicationCommand(interaction, env) {
   const command = interaction.data?.name;
+  const userId = interaction.member?.user?.id || interaction.user?.id;
+  const channelId = interaction.channel_id || "dm";
+  const guildId = interaction.guild_id || null;
+
+  if (command === "forget") {
+    const deleted = await deleteConversation(env.DB, userId, channelId);
+    return deleted
+      ? "このチャンネルで保存していた会話履歴を削除しました。"
+      : "会話履歴を削除できませんでした。D1の設定を確認してください。";
+  }
 
   if (command !== "ask") {
     return "不明なコマンドです。";
@@ -18,8 +32,6 @@ export async function handleApplicationCommand(interaction, env) {
     return `質問は${MAX_PROMPT_LENGTH}文字以内にしてください。`;
   }
 
-  const userId = interaction.member?.user?.id || interaction.user?.id;
-  const channelId = interaction.channel_id || "dm";
   const context = {
     env,
     userId,
@@ -38,7 +50,7 @@ export async function handleApplicationCommand(interaction, env) {
   ];
 
   const answer = await runAgent({ env, messages, context });
-  await saveMessage(env.DB, userId, channelId, "user", prompt.trim());
-  await saveMessage(env.DB, userId, channelId, "assistant", answer);
+  await saveMessage(env.DB, userId, channelId, "user", prompt.trim(), guildId);
+  await saveMessage(env.DB, userId, channelId, "assistant", answer, guildId);
   return answer;
 }
