@@ -35,6 +35,8 @@ export async function createGoogleAuthorizationUrl(db, env, userId) {
   const verifierCiphertext = await encryptSecret(verifier, env);
 
   await db.prepare(
+  await db.prepare("INSERT OR IGNORE INTO users (user_id) VALUES (?)").bind(userId).run();
+
     `INSERT INTO oauth_states
       (state_hash, user_id, provider, code_verifier_ciphertext, expires_at)
      VALUES (?, ?, 'google', ?, datetime('now', '+10 minutes'))`
@@ -190,12 +192,13 @@ async function refreshGoogleAccessToken(db, env, userId, connection) {
   }
 
   const accessCiphertext = await encryptSecret(data.access_token, env);
+  const refreshCiphertext = data.refresh_token ? await encryptSecret(data.refresh_token, env) : connection.refresh_token_ciphertext;
   const expiresAt = new Date(Date.now() + Math.max(60, Number(data.expires_in) || 3600) * 1000).toISOString();
   await db.prepare(
     `UPDATE oauth_connections
-       SET access_token_ciphertext = ?, expires_at = ?, updated_at = CURRENT_TIMESTAMP
+       SET access_token_ciphertext = ?, refresh_token_ciphertext = ?, expires_at = ?, updated_at = CURRENT_TIMESTAMP
      WHERE user_id = ? AND provider = 'google'`
-  ).bind(accessCiphertext, expiresAt, userId).run();
+  ).bind(accessCiphertext, refreshCiphertext, expiresAt, userId).run();
   return data.access_token;
 }
 
