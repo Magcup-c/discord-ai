@@ -1,7 +1,9 @@
-function hexToBytes(hex) {
-  if (!/^[0-9a-f]{128}$/i.test(hex || "")) return null;
-  const bytes = new Uint8Array(64);
-  for (let i = 0; i < 64; i++) {
+function hexToBytes(hex, expectedLength) {
+  if (typeof hex !== "string" || !new RegExp(`^[0-9a-f]{${expectedLength * 2}}$`, "i").test(hex)) {
+    return null;
+  }
+  const bytes = new Uint8Array(expectedLength);
+  for (let i = 0; i < expectedLength; i++) {
     bytes[i] = Number.parseInt(hex.slice(i * 2, i * 2 + 2), 16);
   }
   return bytes;
@@ -10,9 +12,10 @@ function hexToBytes(hex) {
 export async function verifyDiscordRequest(request, rawBody, publicKey) {
   const signature = request.headers.get("X-Signature-Ed25519");
   const timestamp = request.headers.get("X-Signature-Timestamp");
-  const keyBytes = hexToBytes(publicKey);
+  const keyBytes = hexToBytes(publicKey, 32);
+  const signatureBytes = hexToBytes(signature, 64);
 
-  if (!signature || !timestamp || !keyBytes || !/^[0-9a-f]{128}$/i.test(signature)) {
+  if (!signatureBytes || !timestamp || !keyBytes) {
     return false;
   }
 
@@ -23,7 +26,6 @@ export async function verifyDiscordRequest(request, rawBody, publicKey) {
   }
 
   try {
-    const signatureBytes = hexToBytes(signature);
     const key = await crypto.subtle.importKey(
       "raw",
       keyBytes,
