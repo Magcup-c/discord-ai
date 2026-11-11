@@ -1,7 +1,7 @@
 import { registerTool } from "../core/tool-registry.js";
 import { getWeather } from "./weather.js";
 import { searchWeb } from "./web-search.js";
-import { calculate } from "./calculator.js";
+import { calculate } from "./calculator.js";\nimport { googleSearch } from "./google-search.js";
 
 registerTool({
   type: "function",
@@ -50,3 +50,21 @@ registerTool({
     }
   }
 }, calculate);
+
+
+registerTool({
+  type: "function",
+  function: {
+    name: "google_search",
+    description: "ユーザー本人が連携したGoogle DriveまたはGoogle Calendarを読み取り検索します。Google未連携の場合は利用できません。",
+    parameters: {
+      type: "object",
+      properties: {
+        service: { type: "string", enum: ["drive", "calendar"], description: "検索対象のGoogleサービス" },
+        query: { type: "string", minLength: 1, maxLength: 200, description: "検索語" }
+      },
+      required: ["service", "query"],
+      additionalProperties: false
+    }
+  }
+}, googleSearch);
