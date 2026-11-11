@@ -255,7 +255,8 @@ export async function searchGoogleData({ service, query }, context = {}) {
   let endpoint;
 
   if (service === "drive") {
-    const q = encodeURIComponent(`name contains '${query.trim().replace(/'/g, "\\'")}' and trashed = false`);
+    const escapedQuery = query.trim().replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    const q = encodeURIComponent(`name contains '${escapedQuery}' and trashed = false`);
     endpoint = `https://www.googleapis.com/drive/v3/files?q=${q}&pageSize=5&orderBy=modifiedTime%20desc&fields=files(id,name,mimeType,modifiedTime,webViewLink)`;
   } else if (service === "calendar") {
     endpoint = `https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=10&singleEvents=true&orderBy=startTime&timeMin=${encodeURIComponent(new Date().toISOString())}&q=${encodedQuery}`;
