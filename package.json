@@ -1,15 +1,24 @@
 {
   "name": "discord-ai",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Extensible Discord AI bot powered by Cloudflare Workers and Groq",
+  "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "register-commands": "node scripts/register-commands.js",
+    "check": "wrangler deploy --dry-run",
+    "test": "node --test"
   },
-  "keywords": [],
+  "keywords": [
+    "discord",
+    "ai",
+    "cloudflare-workers",
+    "groq"
+  ],
   "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "license": "Apache-2.0",
+  "type": "module",
   "devDependencies": {
     "wrangler": "^4.160.0"
   }
