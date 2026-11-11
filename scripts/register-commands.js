@@ -19,6 +19,10 @@ const commands = [
         max_length: 1500
       }
     ]
+  },
+  {
+    name: "forget",
+    description: "このチャンネルで自分の会話履歴を削除します"
   }
 ];
 
