@@ -40,7 +40,7 @@ Cloudflare Workers 上で動作する、Groq / OpenAI 互換 API 対応の拡張
 - Cloudflare アカウントと Wrangler
 - Discord Application / Bot
 - Groq API キー（または利用する OpenAI 互換 API のキー）
-- Web検索を使う場合は Tavily API キー（TAVILY_API_KEY）\n- 天気機能を使う場合は OpenWeatherMap API キー
+- Web検索はTavilyのキー不要モード（共有レート制限あり）で試せます。専用枠を使う場合のみTAVILY_API_KEYを登録します。\n- 天気機能を使う場合は OpenWeatherMap API キー
 
 ## セットアップ
 
