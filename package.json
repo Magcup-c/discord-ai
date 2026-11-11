@@ -7,9 +7,15 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "register-commands": "node scripts/register-commands.js",
-    "check": "wrangler deploy --dry-run"
+    "check": "wrangler deploy --dry-run",
+    "test": "node --test"
   },
-  "keywords": ["discord", "ai", "cloudflare-workers", "groq"],
+  "keywords": [
+    "discord",
+    "ai",
+    "cloudflare-workers",
+    "groq"
+  ],
   "author": "",
   "license": "Apache-2.0",
   "type": "module",
