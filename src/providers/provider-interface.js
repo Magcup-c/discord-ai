@@ -21,7 +21,7 @@ export async function requestChatCompletion({
       model,
       messages,
       ...(tools.length ? { tools, tool_choice: "auto" } : {}),
-      max_tokens: 1500,
+      max_completion_tokens: 1500,
       temperature: 0.7
     }),
     signal: AbortSignal.timeout(timeoutMs)
