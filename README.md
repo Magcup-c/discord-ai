@@ -134,3 +134,8 @@ npx wrangler dev
 - `/usage` はプロバイダーから返されたトークン数を記録します。料金はプロバイダー・モデル別の単価を設定していないため、現時点では表示しません。
 - Cloudflare Workers の `waitUntil` は長時間ジョブの永続キューではありません。重い処理や複数段階の長時間タスクには Cloudflare Queues 等を追加してください。
 - 会話履歴・記憶・設定・利用量はDiscordユーザーIDで分離して保存します。共有チャンネルでの利用者に保存方針を周知し、必要に応じて保存期間の自動削除を追加してください。
+
+
+## Google個人アカウント連携
+
+Google OAuthの設定、Cloudflare Secrets、D1 migration、利用できるGoogle APIの範囲は [Google OAuthセットアップガイド](docs/google-oauth-setup.md) を参照してください。
