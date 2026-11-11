@@ -18,7 +18,7 @@ export async function loadRecentMessages(db, userId, channelId, limit = 12) {
   }
 }
 
-export async function saveMessage(db, userId, channelId, role, content) {
+export async function saveMessage(db, userId, channelId, role, content, guildId = null) {
   if (!db || !userId || !["user", "assistant"].includes(role)) return;
   const id = conversationId(userId, channelId);
   try {
@@ -27,11 +27,25 @@ export async function saveMessage(db, userId, channelId, role, content) {
     ).bind(userId).run();
     await db.prepare(
       "INSERT OR IGNORE INTO conversations (conversation_id, user_id, guild_id) VALUES (?, ?, ?)"
-    ).bind(id, userId, channelId === "dm" ? null : channelId).run();
+    ).bind(id, userId, guildId).run();
     await db.prepare(
       "INSERT INTO messages (conversation_id, role, content) VALUES (?, ?, ?)"
     ).bind(id, role, String(content).slice(0, 8000)).run();
   } catch (error) {
     console.error("Could not save conversation message:", error);
+  }
+}
+
+export async function deleteConversation(db, userId, channelId) {
+  if (!db || !userId) return false;
+  const id = conversationId(userId, channelId);
+  try {
+    await db.prepare(
+      "DELETE FROM conversations WHERE conversation_id = ? AND user_id = ?"
+    ).bind(id, userId).run();
+    return true;
+  } catch (error) {
+    console.error("Could not delete conversation:", error);
+    return false;
   }
 }
