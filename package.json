@@ -21,5 +21,8 @@
   "type": "module",
   "devDependencies": {
     "wrangler": "^4.160.0"
+  },
+  "dependencies": {
+    "@tavily/core": "^1.0.0"
   }
 }
