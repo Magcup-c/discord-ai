@@ -1,5 +1,5 @@
 import "./tools/index.js";
-import { handleInteraction } from "./discord/interactions.js";
+import { handleInteraction } from "./discord/interactions.js";\nimport { handleGoogleOAuthCallback } from "./integrations/google-oauth.js";
 
 export default {
   async fetch(request, env, ctx) {
@@ -12,7 +12,7 @@ export default {
       });
     }
 
-    if (url.pathname !== "/interactions") {
+    if (url.pathname === "/oauth/google/callback") {\n      if (request.method !== "GET") return new Response("Method not allowed", { status: 405, headers: { Allow: "GET" } });\n      return handleGoogleOAuthCallback(request, env);\n    }\n\n    if (url.pathname !== "/interactions") {
       return new Response("Not found", { status: 404 });
     }
 
