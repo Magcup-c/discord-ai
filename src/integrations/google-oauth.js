@@ -34,9 +34,9 @@ export async function createGoogleAuthorizationUrl(db, env, userId) {
   const stateHash = await sha256Hex(state);
   const verifierCiphertext = await encryptSecret(verifier, env);
 
-  await db.prepare(
   await db.prepare("INSERT OR IGNORE INTO users (user_id) VALUES (?)").bind(userId).run();
 
+  await db.prepare(
     `INSERT INTO oauth_states
       (state_hash, user_id, provider, code_verifier_ciphertext, expires_at)
      VALUES (?, ?, 'google', ?, datetime('now', '+10 minutes'))`
