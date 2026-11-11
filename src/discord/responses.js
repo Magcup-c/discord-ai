@@ -1,7 +1,7 @@
-export function createDeferredResponse() {
+export function createDeferredResponse({ ephemeral = false } = {}) {
   return Response.json({
     type: 5,
-    data: { }
+    data: ephemeral ? { flags: 64 } : {}
   });
 }
 
