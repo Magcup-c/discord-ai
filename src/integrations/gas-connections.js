@@ -21,13 +21,13 @@ export async function createPersonalGasConnection(db, env, userId, endpoint) {
   const secretCiphertext = await encryptSecret(secret, env);
   await db.prepare("INSERT OR IGNORE INTO users (user_id) VALUES (?)").bind(userId).run();
   await db.prepare(
-    \`INSERT INTO gas_connections
+    `INSERT INTO gas_connections
       (id, owner_user_id, name, web_app_url, secret_ciphertext, enabled, created_at, updated_at)
      VALUES (?, ?, 'Personal GAS', ?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
      ON CONFLICT(owner_user_id) DO UPDATE SET
        id = excluded.id, name = excluded.name, web_app_url = excluded.web_app_url,
        secret_ciphertext = excluded.secret_ciphertext, enabled = 1,
-       updated_at = CURRENT_TIMESTAMP\`
+       updated_at = CURRENT_TIMESTAMP`
   ).bind(crypto.randomUUID(), userId, webAppUrl, secretCiphertext).run();
   return { webAppUrl, secret };
 }
@@ -48,7 +48,7 @@ export async function getGasConnection(db, env, userId, scope = "personal") {
   ).bind(userId).first();
   if (!row) return null;
   return {
-    id: row.id, scope: "personal", name: row.name, webAppUrl: row.web_app_url,
+    id: row.id, scope: "personal", name: row.name, webAppUrl: validateGasWebAppUrl(row.web_app_url),
     secret: await decryptSecret(row.secret_ciphertext, env)
   };
 }
