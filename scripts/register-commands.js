@@ -44,6 +44,25 @@ const commands = [
       { type: 11, name: "image", description: "解析する画像（JPEG・PNG・WebP、10MB以下）", required: false }
     ]
   },
+  {
+    name: "gas",
+    description: "Google Apps Script連携を管理します",
+    options: [
+      {
+        type: 1, name: "connect", description: "個人用GASを接続します",
+        options: [stringOption("endpoint", "GAS WebアプリURL", true, { max_length: 500 })]
+      },
+      { type: 1, name: "disconnect", description: "個人用GAS接続を解除します" },
+      { type: 1, name: "connections", description: "個人用・共有GASの接続状態を表示します" },
+      {
+        type: 1, name: "test", description: "GAS接続テストを実行します",
+        options: [choiceOption("scope", "テスト対象", [
+          { name: "個人用", value: "personal" },
+          { name: "共有", value: "shared" }
+        ], false)]
+      }
+    ]
+  },
   { name: "forget", description: "このチャンネルで自分の会話履歴を削除します" },
   {
     name: "memory",
