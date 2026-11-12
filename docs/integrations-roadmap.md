@@ -88,3 +88,30 @@ Client secret は OAuth callback のサーバー側交換処理でのみ使い�
 - OAuth scope の変更は再同意を必要とする。
 - D1バックアップ・ログにもトークン平文が残らないことを確認する。
 - Google/Microsoft/Discordの開発者コンソールでOAuthアプリ登録、redirect URI、同意画面設定が必要。これらはリポジトリのPRだけでは完了しない。
+
+## 7. Google Apps Script（GAS）連携
+
+GASは既存Google OAuthとは別の接続方式として扱います。個人用接続と管理者共有接続の両方をサポートします。
+
+### Personal
+- DiscordユーザーIDに一意に紐付け、WebアプリURLと秘密鍵をD1に保存する。
+- 秘密鍵は既存のAES-GCM暗号化機能で暗号化する。
+- 接続情報の取得・更新・切断は所有者のDiscordユーザーIDで制限する。
+
+### Shared
+- 管理者がCloudflare Worker Secret/VariableでGAS_SHARED_WEB_APP_URLとGAS_SHARED_SECRETを設定する。
+- 共有GASはスクリプト所有者の権限で動作し得るため、ユーザー別・アクション別の許可リストを必須にする。
+- 個別認可が導入されるまでは、共有接続は疎通確認だけに限定する。
+
+### リクエスト認証
+- HMAC-SHA256署名をJSON本文に含める。
+- Unix timestampの許容差は5分。
+- リクエストごとにランダムnonceを発行し、GAS側で再利用を拒否する。
+- Worker側はGASのリダイレクト先をGoogle Apps Scriptの配信ドメインに限定する。
+- 初期アクションはsystem.pingのみとし、任意関数実行は実装しない。
+
+### 実装フェーズ
+1. Phase 1 — 接続基盤: 個人・共有接続、暗号化、HMAC、nonce、接続テスト。
+2. Phase 2 — 読み取り: Sheets/Drive/Calendar読み取り、ユーザー別・アクション別許可。
+3. Phase 3 — 書き込み: Sheets更新、Drive作成・更新、Calendar作成・変更・削除。D1承認キューで本人確認を必須にする。
+4. Phase 4 — Custom / Schedule: 登録済みアクションのみ実行し、ScheduleはWorkers CronとD1で管理する。

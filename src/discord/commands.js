@@ -11,12 +11,22 @@ import { listMemories, saveMemory, deleteMemory, clearMemories } from "../databa
 import { getUserSettings, updateUserSetting } from "../database/settings.js";
 import { getUsageSummary } from "../database/usage.js";
 import { createGoogleAuthorizationUrl, disconnectGoogle, listUserConnections } from "../integrations/google-oauth.js";
+import { createPersonalGasConnection, disconnectPersonalGas, getGasConnection, listGasConnections } from "../integrations/gas-connections.js";
+import { pingGasConnection } from "../integrations/gas-client.js";
 
 const MAX_PROMPT_LENGTH = 1500;
 const ALLOWED_TOOLS = ["get_weather", "web_search", "calculate", "google_search"];
 
 function option(interaction, name) {
   return interaction.data.options?.find(item => item.name === name)?.value;
+}
+
+function subcommand(interaction) {
+  return interaction.data.options?.find(item => item.type === 1);
+}
+
+function subOption(interaction, name) {
+  return subcommand(interaction)?.options?.find(item => item.name === name)?.value;
 }
 
 function getImageAttachment(interaction) {
@@ -111,6 +121,65 @@ export async function handleApplicationCommand(interaction, env) {
       console.error("Google disconnect failed:", error);
       return "Google連携を解除できませんでした。設定を確認してください。";
     }
+  }
+
+
+  if (command === "gas") {
+    const action = subcommand(interaction)?.name;
+    if (action === "connect") {
+      const endpoint = subOption(interaction, "endpoint");
+      if (typeof endpoint !== "string" || !endpoint.trim()) return "GAS WebアプリURLを指定してください。";
+      try {
+        const created = await createPersonalGasConnection(env.DB, env, userId, endpoint.trim());
+        const fence = String.fromCharCode(96).repeat(3);
+        return [
+          "**個人用GASを登録しました。**",
+          "次の秘密鍵をApps Scriptの「プロジェクトの設定 > スクリプト プロパティ」に DISCORD_AI_SECRET として登録してください。",
+          "この秘密鍵は今回だけ表示されます。",
+          fence,
+          created.secret,
+          fence,
+          "登録後、/gas test scope:personal で接続を確認できます。",
+          "※この段階では接続テストのみ利用可能です。Sheets等の操作は次フェーズで有効化します。"
+        ].join("\n");
+      } catch (error) {
+        console.error("GAS connection setup failed:", error);
+        return error.message || "GAS接続を登録できませんでした。";
+      }
+    }
+    if (action === "disconnect") {
+      const removed = await disconnectPersonalGas(env.DB, userId);
+      return removed ? "個人用GAS接続を削除しました。" : "削除できる個人用GAS接続はありません。";
+    }
+    if (action === "connections") {
+      const connections = await listGasConnections(env.DB, env, userId);
+      if (!connections.length) return "GAS接続はありません。個人用は /gas connect、共有用は管理者によるWorker Secret設定が必要です。";
+      return [
+        "**GAS接続一覧**",
+        ...connections.map(item => "• **" + item.scope + "** — " + item.name + "（有効）"),
+        "",
+        "秘密鍵や接続URLの詳細は表示しません。"
+      ].join("\n");
+    }
+    if (action === "test") {
+      const scope = subOption(interaction, "scope") || "personal";
+      if (!["personal", "shared"].includes(scope)) return "scopeはpersonalまたはsharedを指定してください。";
+      try {
+        const connection = await getGasConnection(env.DB, env, userId, scope);
+        if (!connection) {
+          return scope === "shared"
+            ? "共有GASは設定されていません。管理者がGAS_SHARED_WEB_APP_URLとGAS_SHARED_SECRETを設定してください。"
+            : "個人用GASが接続されていません。先に /gas connect を実行してください。";
+        }
+        const result = await pingGasConnection(connection);
+        return "GAS接続テストに成功しました。\n接続：" + connection.name +
+          "\n状態：" + (result.result?.status || "ok");
+      } catch (error) {
+        console.error("GAS connection test failed:", error);
+        return error.message || "GAS接続テストに失敗しました。";
+      }
+    }
+    return "不明なGAS操作です。/gas connections を確認してください。";
   }
 
   if (command === "forget") {
