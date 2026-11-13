@@ -76,6 +76,44 @@ const commands = [
       stringOption("value", "保存する内容（追加時）", false, { max_length: 500 })
     ]
   },
+  {
+    name: "function",
+    description: "登録済みの標準関数を確認・実行します",
+    options: [
+      { type: 1, name: "list", description: "使用可能な関数一覧を表示します" },
+      {
+        type: 1, name: "info", description: "関数の説明と引数を表示します",
+        options: [choiceOption("function", "確認する関数", [
+          { name: "計算", value: "calculate" },
+          { name: "割合計算", value: "percentage" },
+          { name: "統計", value: "statistics" },
+          { name: "単位変換", value: "unit_convert" },
+          { name: "JSON整形", value: "json_format" },
+          { name: "JSON検証", value: "json_validate" },
+          { name: "CSV解析", value: "csv_parse" },
+          { name: "CSVからJSON", value: "csv_to_json" },
+          { name: "日付差分", value: "date_difference" }
+        ])]
+      },
+      {
+        type: 1, name: "run", description: "標準関数を実行します",
+        options: [
+          choiceOption("function", "実行する関数", [
+            { name: "計算", value: "calculate" },
+            { name: "割合計算", value: "percentage" },
+            { name: "統計", value: "statistics" },
+            { name: "単位変換", value: "unit_convert" },
+            { name: "JSON整形", value: "json_format" },
+            { name: "JSON検証", value: "json_validate" },
+            { name: "CSV解析", value: "csv_parse" },
+            { name: "CSVからJSON", value: "csv_to_json" },
+            { name: "日付差分", value: "date_difference" }
+          ]),
+          stringOption("arguments", "引数をJSON形式で指定（例：{\"value\":100,\"percent\":15}）", false, { max_length: 1500 })
+        ]
+      }
+    ]
+  },
   { name: "tools", description: "現在使用可能なツール一覧を表示します" },
   {
     name: "search",
