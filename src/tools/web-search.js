@@ -4,12 +4,20 @@ const MAX_QUERY_LENGTH = 300;
 
 function normalizeResults(data, query) {
   const results = (Array.isArray(data.results) ? data.results : [])
-    .filter(item => item && typeof item.url === "string")
+    .filter(item => {
+      if (!item || typeof item.url !== "string") return false;
+      try {
+        const url = new URL(item.url);
+        return ["http:", "https:"].includes(url.protocol) && !url.username && !url.password;
+      } catch {
+        return false;
+      }
+    })
     .slice(0, 5)
     .map(item => ({
       title: typeof item.title === "string" && item.title.trim() ? item.title.trim() : item.url,
       text: typeof item.content === "string" ? item.content.trim() : "",
-      url: item.url,
+      url: new URL(item.url).toString(),
       score: typeof item.score === "number" ? item.score : undefined
     }));
 
