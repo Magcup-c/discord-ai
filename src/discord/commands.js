@@ -319,7 +319,7 @@ export async function handleApplicationCommand(interaction, env) {
         ...definitions.map(item => `• **${item.function.name}**：${item.function.description}`),
         "",
         "`/function info` で詳細、`/function run` で実行できます。"
-      ].join("\\n").slice(0, 1900);
+      ].join("\n").slice(0, 1900);
     }
     const name = subOption(interaction, "function");
     const definition = definitions.find(item => item.function.name === name);
@@ -337,7 +337,7 @@ export async function handleApplicationCommand(interaction, env) {
         "",
         "**引数**",
         ...(lines.length ? lines : ["引数はありません。"])
-      ].join("\\n").slice(0, 1900);
+      ].join("\n").slice(0, 1900);
     }
     if (action === "run") {
       if (!definition) return "関数が見つかりません。/function list で確認してください。";
@@ -355,7 +355,7 @@ export async function handleApplicationCommand(interaction, env) {
         });
         const output = JSON.stringify(result, null, 2) ?? String(result);
         const safeOutput = output.replace(/`/g, "ˋ").slice(0, 1500);
-        return `**${name} の実行結果**\\n\\`\\`\\`json\\n${safeOutput}\\n\\`\\`\\``;
+        return `**${name} の実行結果**\n${safeOutput}`;
       } catch (error) {
         return `関数を実行できませんでした：${String(error.message || "引数または実行内容を確認してください。").slice(0, 300)}`;
       }
