@@ -14,11 +14,7 @@ function normalizeSearchSources(items) {
       const url = new URL(item.url);
       if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) return [];
       return [{
-        title: String(item.title || url.hostname).replace(/[\\r\\n<>]/g, " ").replace(/[\\*_~|]/g, "\\\\      if (!["http:", "https:"].includes(url.protocol)) return [];
-      return [{
-        title: String(item.title || url.hostname).slice(0, 180),
-        url: url.toString()
-      }];").slice(0, 100),
+        title: String(item.title || url.hostname).replace(/[\r\n<>]/g, " ").slice(0, 100),
         url: url.toString()
       }];
     } catch {
