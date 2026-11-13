@@ -24,7 +24,7 @@ registerTool({
   type: "function",
   function: {
     name: "web_search",
-    description: "ウェブ検索を行い、検索結果の概要を取得します。",
+    description: "ウェブ検索を行い、検索結果を返します。各結果のcitation_indexを回答中の出典番号として引用してください。",
     parameters: {
       type: "object",
       properties: {
