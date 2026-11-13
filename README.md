@@ -8,7 +8,8 @@ Cloudflare Workers 上で動作する、Groq / OpenAI 互換 API 対応の拡張
 - `/ask` AIアシスタントとの会話（D1の履歴を利用、JPEG・PNG・WebP画像の解析にも対応）
 - `/forget` 現在のチャンネルに保存された自分の会話履歴を削除
 - `/memory` 明示的に追加した記憶の確認・追加・削除
-- `/tools` 利用可能なAIツールの一覧表示\n- `/function` 標準関数の一覧・詳細確認・直接実行
+- `/tools` 利用可能なAIツールの一覧表示
+- `/function` 標準関数の一覧・詳細確認・直接実行
 - `/search` Tavily API によるWeb検索（APIキーが必要）
 - `/settings` 言語・応答スタイル・記憶機能の個人設定
 - `/usage` ユーザーごとのAPIリクエスト数・トークン使用量
@@ -26,7 +27,10 @@ Cloudflare Workers 上で動作する、Groq / OpenAI 互換 API 対応の拡張
 | `/memory action:add key: value:` | 記憶を明示的に保存 |
 | `/memory action:delete key:` | 指定した記憶を削除 |
 | `/memory action:clear` | 自分の記憶をすべて削除 |
-| `/tools` | AIが利用可能なツールを表示 |\n| `/function list` | 標準関数一覧を表示 |\n| `/function info function:` | 関数の説明と引数を表示 |\n| `/function run function: arguments:` | JSON形式の引数で関数を直接実行 |
+| `/tools` | AIが利用可能なツールを表示 |
+| `/function list` | 標準関数一覧を表示 |
+| `/function info function:` | 関数の説明と引数を表示 |
+| `/function run function: arguments:` | JSON形式の引数で関数を直接実行 |
 | `/search query:` | Web検索 |
 | `/settings action:view` | 個人設定を表示 |
 | `/settings action:set key: value:` | 個人設定を変更 |
