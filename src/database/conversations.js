@@ -49,9 +49,9 @@ export async function saveSearchContext(db, userId, channelId, context, guildId 
       query: String(context.query || "").slice(0, 300),
       savedAt: Date.now(),
       results: context.results.slice(0, 5).map(item => ({
-        title: String(item.title || "").slice(0, 180),
-        text: String(item.text || "").slice(0, 900),
-        url: String(item.url || "").slice(0, 500)
+        title: String(item.title || "").slice(0, 140),
+        text: String(item.text || "").slice(0, 650),
+        url: String(item.url || "").slice(0, 350)
       }))
     };
     const content = SEARCH_CONTEXT_PREFIX + JSON.stringify(safeContext);
