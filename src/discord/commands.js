@@ -347,7 +347,7 @@ export async function handleApplicationCommand(interaction, env) {
       try {
         args = JSON.parse(rawArguments);
       } catch {
-        return "引数が正しいJSONではありません。例：{\\"value\\":100,\\"percent\\":15}";
+        return "引数が正しいJSONではありません。JSON形式を確認してください。";
       }
       try {
         const result = await executeTool(name, args, {
