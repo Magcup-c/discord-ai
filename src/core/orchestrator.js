@@ -5,6 +5,7 @@ import { recordUsage } from "../database/usage.js";
 const MAX_TOOL_ROUNDS = 4;
 const MAX_TOOL_CALLS = 6;
 const MAX_REFERENCES = 8;
+const MAX_REFERENCE_CHARS = 900;
 
 function normalizeSearchSources(items) {
   if (!Array.isArray(items)) return [];
@@ -36,7 +37,7 @@ function appendSearchReferences(answer, sources, force = false) {
   if (!force && !/\[\d+\]/.test(base)) return base.slice(0, 1900);
   const references = formatSearchReferences(sources);
   if (!references) return base.slice(0, 1900);
-  const suffix = references.slice(0, 1000);
+  const suffix = references;
   const budget = Math.max(100, 1900 - suffix.length);
   return base.slice(0, budget).trimEnd() + suffix;
 }
@@ -91,11 +92,12 @@ export async function runAgent({ env, messages, context = {} }) {
           result = await executeTool(name, args, context);
           if (name === "web_search" && Array.isArray(result?.results)) {
             performedWebSearch = true;
-            const normalized = normalizeSearchSources(result.results);
+            const normalized = normalizeSearchSources(result.results)
+              .slice(0, Math.max(0, MAX_REFERENCES - searchSources.length));
             const firstIndex = searchSources.length + 1;
             result = {
               ...result,
-              results: result.results.map((item, index) => ({
+              results: result.results.slice(0, normalized.length).map((item, index) => ({
                 ...item,
                 citation_index: firstIndex + index
               }))
