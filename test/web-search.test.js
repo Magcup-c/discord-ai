@@ -86,3 +86,17 @@ test("searchWeb returns a helpful empty-result note", async () => {
   assert.equal(result.results.length, 0);
   assert.match(result.note, /検索結果が見つかりません/);
 });
+
+test("searchWeb drops non-HTTP and credential-bearing result URLs", async () => {
+  globalThis.fetch = async () => Response.json({
+    results: [
+      { title: "Safe", content: "Safe page", url: "https://example.com/safe" },
+      { title: "Script", content: "Unsafe scheme", url: "javascript:alert(1)" },
+      { title: "Credentials", content: "Unsafe credentials", url: "https://user:pass@example.com/private" }
+    ]
+  });
+  const result = await searchWeb({ query: "safe URLs" }, { env: { TAVILY_API_KEY: "x" } });
+  assert.equal(result.results.length, 1);
+  assert.equal(result.results[0].title, "Safe");
+  assert.equal(result.results[0].url, "https://example.com/safe");
+});

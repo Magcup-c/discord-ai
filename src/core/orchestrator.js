@@ -4,6 +4,49 @@ import { recordUsage } from "../database/usage.js";
 
 const MAX_TOOL_ROUNDS = 4;
 const MAX_TOOL_CALLS = 6;
+const MAX_REFERENCES = 8;
+const MAX_REFERENCE_CHARS = 900;
+
+function normalizeSearchSources(items) {
+  if (!Array.isArray(items)) return [];
+  return items.flatMap(item => {
+    if (!item || typeof item.url !== "string") return [];
+    try {
+      const url = new URL(item.url);
+      if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) return [];
+      return [{
+        title: String(item.title || url.hostname).replace(/[\r\n<>]/g, " ").slice(0, 100),
+        url: url.toString()
+      }];
+    } catch {
+      return [];
+    }
+  });
+}
+
+export function formatSearchReferences(items) {
+  const sources = normalizeSearchSources(items).slice(0, MAX_REFERENCES);
+  if (!sources.length) return "";
+  const lines = [];
+  let length = "\n\n**参考情報**".length;
+  for (const [index, source] of sources.entries()) {
+    const line = `[${index + 1}] ${source.title} — <${source.url}>`;
+    if (length + line.length + 1 > MAX_REFERENCE_CHARS) break;
+    lines.push(line);
+    length += line.length + 1;
+  }
+  return lines.length ? "\n\n**参考情報**\n" + lines.join("\n") : "";
+}
+
+function appendSearchReferences(answer, sources, force = false) {
+  const base = String(answer || "回答を生成できませんでした。");
+  if (!force && !/\[\d+\]/.test(base)) return base.slice(0, 1900);
+  const references = formatSearchReferences(sources);
+  if (!references) return base.slice(0, 1900);
+  const suffix = references;
+  const budget = Math.max(100, 1900 - suffix.length);
+  return base.slice(0, budget).trimEnd() + suffix;
+}
 
 async function callAndTrack({ env, messages, tools, context }) {
   const response = await callLLM({ env, messages, tools, model: context.model });
@@ -23,7 +66,9 @@ async function callAndTrack({ env, messages, tools, context }) {
 export async function runAgent({ env, messages, context = {} }) {
   const conversation = [...messages];
   const definitions = getToolDefinitions(context.allowedTools);
+  const searchSources = normalizeSearchSources(context.initialSearchResults || []);
   let totalCalls = 0;
+  let performedWebSearch = false;
 
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
     const response = await callAndTrack({ env, messages: conversation, tools: definitions, context });
@@ -31,7 +76,7 @@ export async function runAgent({ env, messages, context = {} }) {
     if (!assistant) throw new Error("AI response is empty");
 
     if (!assistant.tool_calls?.length) {
-      return String(assistant.content || "回答を生成できませんでした。").slice(0, 1900);
+      return appendSearchReferences(assistant.content, searchSources, Boolean(context.alwaysIncludeReferences || performedWebSearch));
     }
 
     conversation.push(assistant);
@@ -51,6 +96,20 @@ export async function runAgent({ env, messages, context = {} }) {
           if (!name) throw new Error("Malformed tool call");
           const args = JSON.parse(toolCall.function.arguments || "{}");
           result = await executeTool(name, args, context);
+          if (name === "web_search" && Array.isArray(result?.results)) {
+            performedWebSearch = true;
+            const normalized = normalizeSearchSources(result.results)
+              .slice(0, Math.max(0, MAX_REFERENCES - searchSources.length));
+            const firstIndex = searchSources.length + 1;
+            result = {
+              ...result,
+              results: result.results.slice(0, normalized.length).map((item, index) => ({
+                ...item,
+                citation_index: firstIndex + index
+              }))
+            };
+            searchSources.push(...normalized);
+          }
         } catch (error) {
           console.error(`Tool execution failed [${name || "unknown"}]:`, error);
           result = { error: "このツールを実行できませんでした。引数、権限、設定を確認してください。" };
@@ -69,9 +128,13 @@ export async function runAgent({ env, messages, context = {} }) {
     env,
     messages: [
       ...conversation,
-      { role: "system", content: "これ以上ツールを呼び出さず、取得済みの情報だけで日本語で回答してください。" }
+      { role: "system", content: "これ以上ツールを呼び出さず、取得済みの情報だけで回答してください。検索結果を使った場合は本文中に[1]の形式で出典番号を付け、裏付けのない主張には付けないでください。" }
     ],
     context
   });
-  return String(finalResponse.choices?.[0]?.message?.content || "回答を生成できませんでした。").slice(0, 1900);
+  return appendSearchReferences(
+    finalResponse.choices?.[0]?.message?.content || "回答を生成できませんでした。",
+    searchSources,
+    Boolean(context.alwaysIncludeReferences || performedWebSearch)
+  );
 }
