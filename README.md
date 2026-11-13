@@ -8,12 +8,13 @@ Cloudflare Workers 上で動作する、Groq / OpenAI 互換 API 対応の拡張
 - `/ask` AIアシスタントとの会話（D1の履歴を利用、JPEG・PNG・WebP画像の解析にも対応）
 - `/forget` 現在のチャンネルに保存された自分の会話履歴を削除
 - `/memory` 明示的に追加した記憶の確認・追加・削除
-- `/tools` 利用可能なツールの一覧表示
+- `/tools` 利用可能なAIツールの一覧表示
+- `/function` 標準関数の一覧・詳細確認・直接実行
 - `/search` Tavily API によるWeb検索（APIキーが必要）
 - `/settings` 言語・応答スタイル・記憶機能の個人設定
 - `/usage` ユーザーごとのAPIリクエスト数・トークン使用量
 - Groq または OpenAI 互換 API の切り替え
-- ツール登録基盤（天気・ウェブ検索・計算）
+- ツール登録基盤（天気・ウェブ検索・Google検索・計算・統計・単位変換・JSON・CSV・日付計算）
 - D1 による会話履歴・記憶・設定・利用量の保存
 
 ## コマンド
@@ -26,7 +27,10 @@ Cloudflare Workers 上で動作する、Groq / OpenAI 互換 API 対応の拡張
 | `/memory action:add key: value:` | 記憶を明示的に保存 |
 | `/memory action:delete key:` | 指定した記憶を削除 |
 | `/memory action:clear` | 自分の記憶をすべて削除 |
-| `/tools` | 利用可能なツールを表示 |
+| `/tools` | AIが利用可能なツールを表示 |
+| `/function list` | 標準関数一覧を表示 |
+| `/function info function:` | 関数の説明と引数を表示 |
+| `/function run function: arguments:` | JSON形式の引数で関数を直接実行 |
 | `/search query:` | Web検索 |
 | `/settings action:view` | 個人設定を表示 |
 | `/settings action:set key: value:` | 個人設定を変更 |
@@ -126,6 +130,30 @@ Groqを使う場合、既定の画像モデルは `qwen/qwen3.8-27b` です。�
 `TAVILY_API_KEY` を Cloudflare Worker Secret に登録すると、`/search` と AI の `web_search` ツールでTavilyを利用します。個人設定の言語はAIへの応答言語として使われます。検索結果の言語・地域は検索語や検索プロバイダー側の判定にも依存します。
 
 外部サービスの個人アカウント連携方針とOAuth設計は [docs/integrations-roadmap.md](docs/integrations-roadmap.md) を参照してください。OAuth連携自体は別フェーズです。
+
+## 標準関数
+
+`/function list` で一覧を確認し、`/function info` で引数を確認できます。`/function run` は引数をJSON文字列で受け取ります。
+
+例：
+
+```text
+/function run function:percentage arguments:{"value":1000,"percent":15}
+/function run function:unit_convert arguments:{"value":2,"from":"km","to":"m"}
+/function run function:statistics arguments:{"values":[10,20,30,40]}
+```
+
+現在の標準関数：
+
+- `calculate`：数式計算
+- `percentage`：割合計算
+- `statistics`：合計・平均・中央値・最小値・最大値・母標準偏差
+- `unit_convert`：長さ・質量・体積・温度の単位変換
+- `json_format` / `json_validate`：JSON整形・検証
+- `csv_parse` / `csv_to_json`：CSV解析・JSON変換
+- `date_difference`：2つの日付・日時の差分
+
+これらの関数は外部コードを評価せず、登録済みの処理だけを実行します。AIの `/ask` からも利用できます。
 
 ## ツールの追加
 

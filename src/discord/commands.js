@@ -1,5 +1,5 @@
 import { runAgent } from "../core/orchestrator.js";
-import { getToolDefinitions } from "../core/tool-registry.js";
+import { getToolDefinitions, executeTool } from "../core/tool-registry.js";
 import { searchWeb } from "../tools/web-search.js";
 import {
   loadRecentMessages,
@@ -16,7 +16,15 @@ import { createPersonalGasConnection, disconnectPersonalGas, getGasConnection, l
 import { pingGasConnection } from "../integrations/gas-client.js";
 
 const MAX_PROMPT_LENGTH = 1500;
-const ALLOWED_TOOLS = ["get_weather", "web_search", "calculate", "google_search"];
+const ALLOWED_TOOLS = [
+  "get_weather", "web_search", "calculate", "google_search",
+  "percentage", "statistics", "unit_convert", "json_format",
+  "json_validate", "csv_parse", "csv_to_json", "date_difference"
+];
+const FUNCTION_TOOLS = [
+  "calculate", "percentage", "statistics", "unit_convert",
+  "json_format", "json_validate", "csv_parse", "csv_to_json", "date_difference"
+];
 
 function option(interaction, name) {
   return interaction.data.options?.find(item => item.name === name)?.value;
@@ -299,6 +307,60 @@ export async function handleApplicationCommand(interaction, env) {
       return `${count}件の記憶を削除しました。`;
     }
     return "不明な操作です。";
+  }
+
+
+  if (command === "function") {
+    const action = subcommand(interaction)?.name;
+    const definitions = getToolDefinitions(FUNCTION_TOOLS);
+    if (action === "list") {
+      return [
+        "**使用可能な関数**",
+        ...definitions.map(item => `• **${item.function.name}**：${item.function.description}`),
+        "",
+        "`/function info` で詳細、`/function run` で実行できます。"
+      ].join("\n").slice(0, 1900);
+    }
+    const name = subOption(interaction, "function");
+    const definition = definitions.find(item => item.function.name === name);
+    if (action === "info") {
+      if (!definition) return "関数が見つかりません。/function list で確認してください。";
+      const parameters = definition.function.parameters || {};
+      const properties = parameters.properties || {};
+      const required = new Set(parameters.required || []);
+      const lines = Object.entries(properties).map(([key, schema]) =>
+        `• ${key} (${schema.type || "any"}${required.has(key) ? "・必須" : "・任意"})${schema.description ? ` — ${schema.description}` : ""}`
+      );
+      return [
+        `**${name}**`,
+        definition.function.description,
+        "",
+        "**引数**",
+        ...(lines.length ? lines : ["引数はありません。"])
+      ].join("\n").slice(0, 1900);
+    }
+    if (action === "run") {
+      if (!definition) return "関数が見つかりません。/function list で確認してください。";
+      const rawArguments = subOption(interaction, "arguments") || "{}";
+      if (rawArguments.length > 1500) return "引数JSONは1500文字以内にしてください。";
+      let args;
+      try {
+        args = JSON.parse(rawArguments);
+      } catch {
+        return "引数が正しいJSONではありません。JSON形式を確認してください。";
+      }
+      try {
+        const result = await executeTool(name, args, {
+          env, userId, channelId, allowedTools: FUNCTION_TOOLS
+        });
+        const output = JSON.stringify(result, null, 2) ?? String(result);
+        const safeOutput = output.replace(/`/g, "ˋ").slice(0, 1500);
+        return `**${name} の実行結果**\n${safeOutput}`;
+      } catch (error) {
+        return `関数を実行できませんでした：${String(error.message || "引数または実行内容を確認してください。").slice(0, 300)}`;
+      }
+    }
+    return "操作を選択してください。";
   }
 
   if (command === "tools") {

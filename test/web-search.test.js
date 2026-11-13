@@ -60,7 +60,7 @@ test("searchWeb uses the injected keyless client without requiring a key", async
 
   assert.equal(received.query, "multilingual search");
   assert.equal(received.options.country, "United States");
-  assert.equal(result.results[0].url, "https://example.com");
+  assert.equal(result.results[0].url, "https://example.com/");
 });
 
 test("searchWeb validates query length and emptiness", async () => {
