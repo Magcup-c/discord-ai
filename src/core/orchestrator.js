@@ -24,14 +24,7 @@ function normalizeSearchSources(items) {
 }
 
 export function formatSearchReferences(items) {
-  const seen = new Set();
-  const sources = [];
-  for (const source of normalizeSearchSources(items)) {
-    if (seen.has(source.url)) continue;
-    seen.add(source.url);
-    sources.push(source);
-    if (sources.length >= MAX_REFERENCES) break;
-  }
+  const sources = normalizeSearchSources(items).slice(0, MAX_REFERENCES);
   if (!sources.length) return "";
   return "\n\n**参考情報**\n" + sources
     .map((source, index) => `[${index + 1}] ${source.title} — <${source.url}>`)
@@ -40,7 +33,7 @@ export function formatSearchReferences(items) {
 
 function appendSearchReferences(answer, sources, force = false) {
   const base = String(answer || "回答を生成できませんでした。");
-  if (!force && !/\\[\\d+\\]/.test(base)) return base.slice(0, 1900);
+  if (!force && !/\[\d+\]/.test(base)) return base.slice(0, 1900);
   const references = formatSearchReferences(sources);
   if (!references) return base.slice(0, 1900);
   const suffix = references.slice(0, 1000);
@@ -98,7 +91,16 @@ export async function runAgent({ env, messages, context = {} }) {
           result = await executeTool(name, args, context);
           if (name === "web_search" && Array.isArray(result?.results)) {
             performedWebSearch = true;
-            searchSources.push(...normalizeSearchSources(result.results));
+            const normalized = normalizeSearchSources(result.results);
+            const firstIndex = searchSources.length + 1;
+            result = {
+              ...result,
+              results: result.results.map((item, index) => ({
+                ...item,
+                citation_index: firstIndex + index
+              }))
+            };
+            searchSources.push(...normalized);
           }
         } catch (error) {
           console.error(`Tool execution failed [${name || "unknown"}]:`, error);
