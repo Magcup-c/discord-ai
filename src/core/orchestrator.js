@@ -38,10 +38,11 @@ export function formatSearchReferences(items) {
     .join("\n");
 }
 
-function appendSearchReferences(answer, sources) {
-  const references = formatSearchReferences(sources);
-  if (!references) return String(answer || "回答を生成できませんでした。").slice(0, 1900);
+function appendSearchReferences(answer, sources, force = false) {
   const base = String(answer || "回答を生成できませんでした。");
+  if (!force && !/\\[\\d+\\]/.test(base)) return base.slice(0, 1900);
+  const references = formatSearchReferences(sources);
+  if (!references) return base.slice(0, 1900);
   const suffix = references.slice(0, 1000);
   const budget = Math.max(100, 1900 - suffix.length);
   return base.slice(0, budget).trimEnd() + suffix;
@@ -67,6 +68,7 @@ export async function runAgent({ env, messages, context = {} }) {
   const definitions = getToolDefinitions(context.allowedTools);
   const searchSources = normalizeSearchSources(context.initialSearchResults || []);
   let totalCalls = 0;
+  let performedWebSearch = false;
 
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
     const response = await callAndTrack({ env, messages: conversation, tools: definitions, context });
@@ -74,7 +76,7 @@ export async function runAgent({ env, messages, context = {} }) {
     if (!assistant) throw new Error("AI response is empty");
 
     if (!assistant.tool_calls?.length) {
-      return appendSearchReferences(assistant.content, searchSources);
+      return appendSearchReferences(assistant.content, searchSources, Boolean(context.alwaysIncludeReferences || performedWebSearch));
     }
 
     conversation.push(assistant);
@@ -95,6 +97,7 @@ export async function runAgent({ env, messages, context = {} }) {
           const args = JSON.parse(toolCall.function.arguments || "{}");
           result = await executeTool(name, args, context);
           if (name === "web_search" && Array.isArray(result?.results)) {
+            performedWebSearch = true;
             searchSources.push(...normalizeSearchSources(result.results));
           }
         } catch (error) {
@@ -121,6 +124,7 @@ export async function runAgent({ env, messages, context = {} }) {
   });
   return appendSearchReferences(
     finalResponse.choices?.[0]?.message?.content || "回答を生成できませんでした。",
-    searchSources
+    searchSources,
+    Boolean(context.alwaysIncludeReferences || performedWebSearch)
   );
 }
