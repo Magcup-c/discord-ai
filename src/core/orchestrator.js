@@ -27,9 +27,15 @@ function normalizeSearchSources(items) {
 export function formatSearchReferences(items) {
   const sources = normalizeSearchSources(items).slice(0, MAX_REFERENCES);
   if (!sources.length) return "";
-  return "\n\n**参考情報**\n" + sources
-    .map((source, index) => `[${index + 1}] ${source.title} — <${source.url}>`)
-    .join("\n");
+  const lines = [];
+  let length = "\n\n**参考情報**".length;
+  for (const [index, source] of sources.entries()) {
+    const line = `[${index + 1}] ${source.title} — <${source.url}>`;
+    if (length + line.length + 1 > MAX_REFERENCE_CHARS) break;
+    lines.push(line);
+    length += line.length + 1;
+  }
+  return lines.length ? "\n\n**参考情報**\n" + lines.join("\n") : "";
 }
 
 function appendSearchReferences(answer, sources, force = false) {
