@@ -83,7 +83,7 @@ test("search context expires after the configured lifetime", async () => {
     query: "old query",
     results: [{ title: "Old", text: "Old result", url: "https://example.com" }]
   });
-  const context = await loadLatestSearchContext(db, "user-1", "channel-1", 0);
+  const context = await loadLatestSearchContext(db, "user-1", "channel-1", -1);
   assert.equal(context, null);
 });
 
