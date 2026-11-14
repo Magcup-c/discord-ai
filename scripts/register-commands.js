@@ -69,12 +69,19 @@ const commands = [
     name: "memory",
     description: "AIの記憶を確認・管理します",
     options: [
-      choiceOption("action", "実行する操作", [
-        { name: "確認", value: "view" }, { name: "追加", value: "add" },
-        { name: "削除", value: "delete" }, { name: "すべて削除", value: "clear" }
-      ]),
-      stringOption("key", "記憶の名前（追加・削除時）", false, { max_length: 64 }),
-      stringOption("value", "保存する内容（追加時）", false, { max_length: 500 })
+      { type: 1, name: "view", description: "保存されている記憶を一覧表示します" },
+      {
+        type: 1, name: "add", description: "新しい記憶を保存します",
+        options: [
+          stringOption("key", "記憶の名前", true, { max_length: 64 }),
+          stringOption("value", "保存する内容", true, { max_length: 500 })
+        ]
+      },
+      {
+        type: 1, name: "delete", description: "指定した記憶を削除します",
+        options: [stringOption("key", "削除する記憶の名前", true, { max_length: 64 })]
+      },
+      { type: 1, name: "clear", description: "保存されている記憶をすべて削除します" }
     ]
   },
   {
@@ -125,15 +132,25 @@ const commands = [
     name: "settings",
     description: "個人設定を確認・変更します",
     options: [
-      choiceOption("action", "実行する操作", [
-        { name: "確認", value: "view" }, { name: "変更", value: "set" }
-      ]),
-      choiceOption("key", "変更する設定", [
-        { name: "言語", value: "language" },
-        { name: "応答スタイル", value: "response_style" },
-        { name: "記憶機能", value: "memory_enabled" }
-      ], false),
-      stringOption("value", "設定値（例：ja / concise / true）", false, { max_length: 30 })
+      { type: 1, name: "view", description: "現在の設定を表示します" },
+      {
+        type: 1, name: "language", description: "応答言語を変更します",
+        options: [choiceOption("value", "応答言語", [
+          { name: "日本語", value: "ja" }, { name: "English", value: "en" }
+        ])]
+      },
+      {
+        type: 1, name: "style", description: "応答の詳しさを変更します",
+        options: [choiceOption("value", "応答スタイル", [
+          { name: "簡潔", value: "concise" },
+          { name: "標準", value: "balanced" },
+          { name: "詳しい", value: "detailed" }
+        ])]
+      },
+      {
+        type: 1, name: "memory", description: "AIが保存した記憶を回答に使うか設定します",
+        options: [{ type: 5, name: "enabled", description: "記憶機能を有効にする", required: true }]
+      }
     ]
   },
   {
