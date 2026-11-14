@@ -191,6 +191,34 @@ export async function handleApplicationCommand(interaction, env) {
     return "不明なGAS操作です。/gas connections を確認してください。";
   }
 
+  if (command === "help") {
+    return [
+      "**Discord AI — コマンドガイド**",
+      "",
+      "**会話・検索**",
+      "• `/ask prompt:` — AIに質問（画像も添付できます）",
+      "• `/search query:` — Web検索して要点をまとめます",
+      "",
+      "**記憶・設定**",
+      "• `/memory action:` — 記憶の確認・追加・削除",
+      "• `/forget` — このチャンネルの自分の会話履歴を削除",
+      "• `/settings action:` — 言語・応答スタイル・記憶設定",
+      "• `/usage period:` — 自分のAPI使用量を確認",
+      "",
+      "**ツール・関数**",
+      "• `/tools` — AIが使えるツール一覧",
+      "• `/function list` — 関数一覧",
+      "• `/function info` — 関数の引数を確認",
+      "• `/function run` — 関数を実行（引数はJSON形式）",
+      "",
+      "**外部サービス**",
+      "• `/connect`・`/connections`・`/disconnect` — Google連携",
+      "• `/gas` — GAS接続の登録・確認・解除",
+      "",
+      "個人情報を扱う管理コマンドの結果は、本人だけに表示されます。"
+    ].join("\\n");
+  }
+
   if (command === "forget") {
     const deleted = await deleteConversation(env.DB, userId, channelId);
     return deleted
@@ -475,5 +503,5 @@ export async function handleApplicationCommand(interaction, env) {
     ].join("\n").slice(0, 1900);
   }
 
-  return "不明なコマンドです。";
+  return `未対応のコマンドです（受信した名前: `${String(command || "なし").slice(0, 50)}`）。\\n\\n`/help` で利用可能なコマンドを確認できます。`;
 }
