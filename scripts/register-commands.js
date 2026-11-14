@@ -122,6 +122,33 @@ const commands = [
       }
     ]
   },
+  {
+    name: "calculate",
+    description: "数式を計算します",
+    options: [stringOption("expression", "計算する数式（例：(12 + 5) * 3）", true, { max_length: 200 })]
+  },
+  {
+    name: "percentage",
+    description: "数値の指定した割合を計算します",
+    options: [
+      { type: 10, name: "value", description: "元の数値", required: true },
+      { type: 10, name: "percent", description: "割合（パーセント）", required: true }
+    ]
+  },
+  {
+    name: "convert",
+    description: "長さ・質量・体積・温度の単位を変換します",
+    options: [
+      { type: 10, name: "value", description: "変換する値", required: true },
+      choiceOption("from", "変換元の単位", ["mm", "cm", "m", "km", "mg", "g", "kg", "ml", "l", "c", "f", "k"].map(unit => ({ name: unit, value: unit }))),
+      choiceOption("to", "変換先の単位", ["mm", "cm", "m", "km", "mg", "g", "kg", "ml", "l", "c", "f", "k"].map(unit => ({ name: unit, value: unit })))
+    ]
+  },
+  {
+    name: "statistics",
+    description: "数値の合計・平均・中央値などを計算します",
+    options: [stringOption("numbers", "数値をカンマ区切りで入力（例：10, 20, 30）", true, { max_length: 1500 })]
+  },
   { name: "tools", description: "現在使用可能なツール一覧を表示します" },
   {
     name: "search",
