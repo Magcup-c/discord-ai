@@ -503,5 +503,5 @@ export async function handleApplicationCommand(interaction, env) {
     ].join("\n").slice(0, 1900);
   }
 
-  return `未対応のコマンドです（受信した名前: `${String(command || "なし").slice(0, 50)}`）。\\n\\n`/help` で利用可能なコマンドを確認できます。`;
+  return `未対応のコマンドです（受信した名前: ${String(command || "なし").slice(0, 50)}）。\n\n/help で利用可能なコマンドを確認できます。`;
 }
