@@ -1,3 +1,11 @@
+## 便利な計算コマンド
+
+- `/calculate expression:` — 数式を計算します。例：`/calculate expression:(12 + 5) * 3`
+- `/percentage value: percent:` — 指定した割合を計算します。例：`/percentage value:200 percent:15`
+- `/convert value: from: to:` — 長さ・質量・体積・温度の単位を変換します。
+- `/statistics numbers:` — カンマ区切りの数値から合計・平均・中央値などを計算します。例：`/statistics numbers:10,20,30`
+
+これらの専用コマンドではJSONを入力する必要はありません。詳細な関数操作には引き続き `/function list`・`/function info`・`/function run` を使用できます。
 # discord-ai
 
 Cloudflare Workers 上で動作する、Groq / OpenAI 互換 API 対応の拡張可能な Discord AI Bot です。
