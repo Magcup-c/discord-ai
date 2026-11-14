@@ -216,7 +216,7 @@ export async function handleApplicationCommand(interaction, env) {
       "• `/gas` — GAS接続の登録・確認・解除",
       "",
       "個人情報を扱う管理コマンドの結果は、本人だけに表示されます。"
-    ].join("\\n");
+    ].join("\n");
   }
 
   if (command === "forget") {
