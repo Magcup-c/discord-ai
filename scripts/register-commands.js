@@ -14,6 +14,7 @@ const choiceOption = (name, description, choices, required = true) => ({
 });
 
 const commands = [
+  { name: "help", description: "コマンド一覧と使い方を表示します" },
   {
     name: "connect",
     description: "外部サービスの個人アカウントを連携します",
