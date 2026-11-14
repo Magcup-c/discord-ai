@@ -209,6 +209,10 @@ export async function handleApplicationCommand(interaction, env) {
       "• `/tools` — AIが使えるツール一覧",
       "• `/function list` — 関数一覧",
       "• `/function info` — 関数の引数を確認",
+      "• `/calculate expression:` — 数式を計算",
+      "• `/percentage value: percent:` — 割合を計算",
+      "• `/convert value: from: to:` — 単位を変換",
+      "• `/statistics numbers:` — 数値の統計を計算（カンマ区切り）",
       "• `/function run` — 関数を実行（引数はJSON形式）",
       "",
       "**外部サービス**",
@@ -338,6 +342,38 @@ export async function handleApplicationCommand(interaction, env) {
   }
 
 
+  if (["calculate", "percentage", "convert", "statistics"].includes(command)) {
+    let name;
+    let args;
+    if (command === "calculate") {
+      name = "calculate";
+      args = { expression: option(interaction, "expression") };
+      if (typeof args.expression !== "string" || !args.expression.trim()) return "計算する数式を入力してください。例：(12 + 5) * 3";
+    } else if (command === "percentage") {
+      name = "percentage";
+      args = { value: option(interaction, "value"), percent: option(interaction, "percent") };
+    } else if (command === "convert") {
+      name = "unit_convert";
+      args = { value: option(interaction, "value"), from: option(interaction, "from"), to: option(interaction, "to") };
+    } else {
+      name = "statistics";
+      const raw = option(interaction, "numbers");
+      if (typeof raw !== "string" || !raw.trim()) return "集計する数値をカンマ区切りで入力してください。例：10, 20, 30";
+      const parts = raw.split(",").map(item => item.trim());
+      if (parts.length > 1000 || parts.some(item => !item || !/^[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?$/.test(item))) return "数値はカンマ区切りで1〜1000個入力してください。空欄や数値以外は指定できません。";
+      args = { values: parts.map(Number) };
+      if (args.values.some(value => !Number.isFinite(value))) return "有効な数値を入力してください。";
+    }
+    try {
+      const result = await executeTool(name, args, { env, userId, channelId, allowedTools: FUNCTION_TOOLS });
+      if (command === "calculate") return "**計算結果**\\n```" + String(result.result) + "```";
+      if (command === "percentage") return "**割合の計算結果**\\n" + result.value + " の " + result.percent + "% = **" + result.result + "**";
+      if (command === "convert") return "**単位変換結果**\\n" + result.value + " " + result.from + " = **" + result.result + " " + result.to + "**";
+      return ["**統計結果**", "件数：" + result.count, "合計：" + result.sum, "平均：" + result.mean, "中央値：" + result.median, "最小値：" + result.min, "最大値：" + result.max, "母標準偏差：" + result.population_standard_deviation].join("\\n");
+    } catch (error) {
+      return "処理できませんでした：" + String(error.message || "入力内容を確認してください。").slice(0, 300);
+    }
+  }
   if (command === "function") {
     const action = subcommand(interaction)?.name;
     const definitions = getToolDefinitions(FUNCTION_TOOLS);
