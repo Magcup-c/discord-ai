@@ -309,9 +309,9 @@ export async function handleApplicationCommand(interaction, env) {
   }
 
   if (command === "memory") {
-    const action = option(interaction, "action") || "view";
-    const key = option(interaction, "key")?.trim();
-    const value = option(interaction, "value")?.trim();
+    const action = subcommand(interaction)?.name || option(interaction, "action") || "view";
+    const key = (subOption(interaction, "key") ?? option(interaction, "key"))?.trim();
+    const value = (subOption(interaction, "value") ?? option(interaction, "value"))?.trim();
     if (action === "view") {
       const memories = await listMemories(env.DB, userId);
       if (!memories.length) return "保存されている記憶はありません。追加するには `/memory action:add` を使ってください。";
@@ -462,11 +462,26 @@ export async function handleApplicationCommand(interaction, env) {
   }
 
   if (command === "settings") {
-    const action = option(interaction, "action") || "view";
+    const action = subcommand(interaction)?.name || option(interaction, "action") || "view";
     if (action === "view") return formatSettings(await getUserSettings(env.DB, userId));
-    if (action !== "set") return "不明な操作です。";
-    const key = option(interaction, "key");
-    const value = option(interaction, "value")?.trim();
+    let key;
+    let value;
+    if (action === "language") {
+      key = "language";
+      value = subOption(interaction, "value");
+    } else if (action === "style") {
+      key = "response_style";
+      value = subOption(interaction, "value");
+    } else if (action === "memory") {
+      key = "memory_enabled";
+      value = subOption(interaction, "enabled");
+      value = typeof value === "boolean" ? String(value) : value;
+    } else if (action === "set") {
+      key = option(interaction, "key");
+      value = option(interaction, "value")?.trim();
+    } else {
+      return "操作を選択してください。/settings view で現在の設定を確認できます。";
+    }
     if (!key || !value) return "変更する key と value を指定してください。";
     let normalized = value;
     if (key === "language") {
