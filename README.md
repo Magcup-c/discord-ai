@@ -23,20 +23,20 @@ Cloudflare Workers 上で動作する、Groq / OpenAI 互換 API 対応の拡張
 | --- | --- |
 | `/ask prompt: image:` | AIに質問（画像は任意） |
 | `/forget` | 現在のチャンネルの自分の会話履歴を削除（記憶は削除しない） |
-| `/memory action:view` | 記憶を確認 |
-| `/memory action:add key: value:` | 記憶を明示的に保存 |
-| `/memory action:delete key:` | 指定した記憶を削除 |
-| `/memory action:clear` | 自分の記憶をすべて削除 |
+| `/memory view` | 記憶を確認 |
+| `/memory add key: value:` | 記憶を明示的に保存 |
+| `/memory delete key:` | 指定した記憶を削除 |
+| `/memory clear` | 自分の記憶をすべて削除 |
 | `/tools` | AIが利用可能なツールを表示 |
 | `/function list` | 標準関数一覧を表示 |
 | `/function info function:` | 関数の説明と引数を表示 |
 | `/function run function: arguments:` | JSON形式の引数で関数を直接実行 |
 | `/search query:` | Web検索 |
-| `/settings action:view` | 個人設定を表示 |
-| `/settings action:set key: value:` | 個人設定を変更 |
+| `/settings view` | 個人設定を表示 |
+| `/settings language value:`・`/settings style value:`・`/settings memory enabled:` | 個人設定を変更 |
 | `/usage period:` | API使用量を確認 |
 
-記憶はユーザーが `/memory action:add` で明示的に保存した内容だけを保持します。記憶の自動抽出は行いません。`/forget` は会話履歴のみを削除し、記憶は `/memory` で別に管理します。
+記憶はユーザーが `/memory add` で明示的に保存した内容だけを保持します。記憶の自動抽出は行いません。`/forget` は会話履歴のみを削除し、記憶は `/memory` で別に管理します。
 
 ## 必要なもの
 
