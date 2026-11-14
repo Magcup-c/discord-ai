@@ -79,7 +79,7 @@ function formatSettings(settings) {
     `応答スタイル：${settings.response_style}`,
     `記憶機能：${settings.memory_enabled ? "有効" : "無効"}`,
     "",
-    "変更する場合は `/settings action:set` を使用してください。"
+    "変更する場合は `/settings language`・`/settings style`・`/settings memory` を使用してください。"
   ].join("\n");
 }
 
@@ -318,7 +318,7 @@ export async function handleApplicationCommand(interaction, env) {
     const value = (subOption(interaction, "value") ?? option(interaction, "value"))?.trim();
     if (action === "view") {
       const memories = await listMemories(env.DB, userId);
-      if (!memories.length) return "保存されている記憶はありません。追加するには `/memory action:add` を使ってください。";
+      if (!memories.length) return "保存されている記憶はありません。追加するには `/memory add` を使ってください。";
       return ["**保存されている記憶**", ...memories.map(item => `• **${item.memory_key}**：${item.memory_value}`)].join("\n").slice(0, 1900);
     }
     if (action === "add") {
@@ -360,16 +360,16 @@ export async function handleApplicationCommand(interaction, env) {
       const raw = option(interaction, "numbers");
       if (typeof raw !== "string" || !raw.trim()) return "集計する数値をカンマ区切りで入力してください。例：10, 20, 30";
       const parts = raw.split(",").map(item => item.trim());
-      if (parts.length > 1000 || parts.some(item => !item || !/^[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?$/.test(item))) return "数値はカンマ区切りで1〜1000個入力してください。空欄や数値以外は指定できません。";
+      if (parts.length > 1000 || parts.some(item => !item || !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(item))) return "数値はカンマ区切りで1〜1000個入力してください。空欄や数値以外は指定できません。";
       args = { values: parts.map(Number) };
       if (args.values.some(value => !Number.isFinite(value))) return "有効な数値を入力してください。";
     }
     try {
       const result = await executeTool(name, args, { env, userId, channelId, allowedTools: FUNCTION_TOOLS });
-      if (command === "calculate") return "**計算結果**\\n```" + String(result.result) + "```";
-      if (command === "percentage") return "**割合の計算結果**\\n" + result.value + " の " + result.percent + "% = **" + result.result + "**";
-      if (command === "convert") return "**単位変換結果**\\n" + result.value + " " + result.from + " = **" + result.result + " " + result.to + "**";
-      return ["**統計結果**", "件数：" + result.count, "合計：" + result.sum, "平均：" + result.mean, "中央値：" + result.median, "最小値：" + result.min, "最大値：" + result.max, "母標準偏差：" + result.population_standard_deviation].join("\\n");
+      if (command === "calculate") return "**計算結果**\n```" + String(result.result) + "```";
+      if (command === "percentage") return "**割合の計算結果**\n" + result.value + " の " + result.percent + "% = **" + result.result + "**";
+      if (command === "convert") return "**単位変換結果**\n" + result.value + " " + result.from + " = **" + result.result + " " + result.to + "**";
+      return ["**統計結果**", "件数：" + result.count, "合計：" + result.sum, "平均：" + result.mean, "中央値：" + result.median, "最小値：" + result.min, "最大値：" + result.max, "母標準偏差：" + result.population_standard_deviation].join("\n");
     } catch (error) {
       return "処理できませんでした：" + String(error.message || "入力内容を確認してください。").slice(0, 300);
     }
