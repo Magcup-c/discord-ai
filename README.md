@@ -78,6 +78,7 @@ Cloudflare Workers 上で動作する、Groq / OpenAI 互換 API 対応の拡張
    npx wrangler secret put GROQ_API_KEY
    npx wrangler secret put WEATHER_API_KEY
    npx wrangler secret put TAVILY_API_KEY
+   npx wrangler secret put D1_DATA_ENCRYPTION_KEY
    ```
 
    画像解析では、Groq の `GROQ_VISION_MODEL`（既定値：`qwen/qwen3.8-27b`）を使用します。通常のテキスト会話で使う `GROQ_MODEL` とは別設定です。OpenAI互換APIでは `OPENAI_COMPATIBLE_VISION_MODEL` を指定できます。接続先のモデルが画像入力に対応していることを確認してください。
@@ -184,3 +185,22 @@ Google OAuthの設定、Cloudflare Secrets、D1 migration、利用できるGoogl
 - `/statistics numbers:` — カンマ区切りの数値から合計・平均・中央値などを計算します。例：`/statistics numbers:10,20,30`
 
 これらの専用コマンドではJSONを入力する必要はありません。詳細な関数操作には引き続き `/function list`・`/function info`・`/function run` を使用できます。
+
+## D1保存データの暗号化
+
+会話履歴、Web検索コンテキスト、ユーザーが明示的に保存した記憶の本文は、Worker内でAES-256-GCMにより暗号化してからD1へ保存します。暗号化キーはD1とは別にCloudflare Worker Secret `D1_DATA_ENCRYPTION_KEY` として保管してください。
+
+キーは32バイトのランダム値をBase64化したものです。例：
+
+```bash
+openssl rand -base64 32
+npx wrangler secret put D1_DATA_ENCRYPTION_KEY
+```
+
+生成した値をSecretの入力欄に貼り付けます。キーをソースコード、wrangler.toml、GitHub、Discord、チャットに書き込まないでください。OAuth用の `OAUTH_TOKEN_ENCRYPTION_KEY` とは別のキーを使用します。
+
+暗号化済みデータには `enc:v1:` の形式識別子が付きます。既存の平文データは読み込まれた際に暗号化して同じ行を更新するため、利用されたデータから順次移行されます。**この方式では、まだ一度も読み込まれていない古い行は平文のまま残ります。** 全件移行が必要な場合は、バックアップを取得したうえで別途バッチ移行を実行してください。
+
+D1のバックアップを暗号化キーとは別に安全な場所へ保管してください。キーを失うと暗号化済みの会話履歴・記憶は復号できません。キーを変更する場合は、旧キーで復号して新キーで再暗号化するローテーション作業が必要です。現在の暗号化形式はバージョン付きで、将来の形式変更に対応できるようにしています。
+
+ユーザー設定（言語・応答スタイル・記憶機能の有効/無効）や使用量集計は機密本文ではないため、現時点では検索・集計可能な平文のままです。DiscordユーザーID、会話ID、時刻などのメタデータも暗号化対象外です。
