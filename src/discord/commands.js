@@ -317,7 +317,7 @@ export async function handleApplicationCommand(interaction, env) {
     const key = (subOption(interaction, "key") ?? option(interaction, "key"))?.trim();
     const value = (subOption(interaction, "value") ?? option(interaction, "value"))?.trim();
     if (action === "view") {
-      const memories = await listMemories(env.DB, userId);
+      const memories = await listMemories(env.DB, userId, env);
       if (!memories.length) return "保存されている記憶はありません。追加するには `/memory add` を使ってください。";
       return ["**保存されている記憶**", ...memories.map(item => `• **${item.memory_key}**：${item.memory_value}`)].join("\n").slice(0, 1900);
     }
@@ -485,7 +485,7 @@ export async function handleApplicationCommand(interaction, env) {
       });
 
       await saveMessage(env.DB, userId, channelId, "user", `/search: ${query.trim()}`, guildId, env);
-      await saveMessage(env.DB, userId, channelId, "assistant", answer, guildId);
+      await saveMessage(env.DB, userId, channelId, "assistant", answer, guildId, env);
       await saveSearchContext(env.DB, userId, channelId, {
         query: query.trim(),
         results: searchSources
