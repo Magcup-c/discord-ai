@@ -6,17 +6,17 @@ function toBase64Url(bytes) {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-function fromBase64(value) {
+function fromBase64(value, secretName) {
   if (typeof value !== "string" || !/^[A-Za-z0-9+/]+={0,2}$/.test(value)) {
-    throw new Error("OAUTH_TOKEN_ENCRYPTION_KEY must be a base64-encoded 32-byte key");
+    throw new Error(`${secretName} must be a base64-encoded 32-byte key`);
   }
   const binary = atob(value);
   return Uint8Array.from(binary, char => char.charCodeAt(0));
 }
 
 async function encryptionKey(env, secretName = "OAUTH_TOKEN_ENCRYPTION_KEY") {
-  const raw = fromBase64(env[secretName]);
-  if (raw.length !== 32) throw new Error("OAUTH_TOKEN_ENCRYPTION_KEY must decode to exactly 32 bytes");
+  const raw = fromBase64(env[secretName], secretName);
+  if (raw.length !== 32) throw new Error(`${secretName} must decode to exactly 32 bytes`);
   return crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt", "decrypt"]);
 }
 
