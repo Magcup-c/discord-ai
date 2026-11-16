@@ -31,7 +31,7 @@ export async function handleD1EncryptionMigration(request, env) {
   }
   const afterMessageId = Math.max(0, Math.floor(Number(input.afterMessageId) || 0));
   const afterMemoryId = Math.max(0, Math.floor(Number(input.afterMemoryId) || 0));
-  const batchSize = Math.max(1, Math.min(100, Math.floor(Number(input.batchSize) || 50)));
+  const batchSize = Math.max(1, Math.min(50, Math.floor(Number(input.batchSize) || 25)));
 
   const messages = await env.DB.prepare(
     "SELECT id, content FROM messages WHERE id > ? AND content NOT LIKE 'enc:v1:%' ORDER BY id LIMIT ?"
