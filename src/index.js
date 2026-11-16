@@ -1,6 +1,7 @@
 import "./tools/index.js";
 import { handleInteraction } from "./discord/interactions.js";
 import { handleGoogleOAuthCallback } from "./integrations/google-oauth.js";
+import { handleD1EncryptionMigration } from "./database/encryption-migration.js";
 
 export default {
   async fetch(request, env, ctx) {
@@ -11,6 +12,10 @@ export default {
         status: 200,
         headers: { "content-type": "text/plain; charset=utf-8" }
       });
+    }
+
+    if (url.pathname === "/admin/encrypt-d1") {
+      return handleD1EncryptionMigration(request, env);
     }
 
     if (url.pathname === "/oauth/google/callback") {
