@@ -78,6 +78,8 @@ Cloudflare Workers 上で動作する、Groq / OpenAI 互換 API 対応の拡張
    npx wrangler secret put GROQ_API_KEY
    npx wrangler secret put WEATHER_API_KEY
    npx wrangler secret put TAVILY_API_KEY
+   npx wrangler secret put D1_DATA_ENCRYPTION_KEY
+   npx wrangler secret put D1_MIGRATION_SECRET
    ```
 
    画像解析では、Groq の `GROQ_VISION_MODEL`（既定値：`qwen/qwen3.8-27b`）を使用します。通常のテキスト会話で使う `GROQ_MODEL` とは別設定です。OpenAI互換APIでは `OPENAI_COMPATIBLE_VISION_MODEL` を指定できます。接続先のモデルが画像入力に対応していることを確認してください。
@@ -175,3 +177,49 @@ Groqを使う場合、既定の画像モデルは `qwen/qwen3.8-27b` です。�
 ## Google個人アカウント連携
 
 Google OAuthの設定、Cloudflare Secrets、D1 migration、利用できるGoogle APIの範囲は [Google OAuthセットアップガイド](docs/google-oauth-setup.md) を参照してください。
+
+## 便利な計算コマンド
+
+- `/calculate expression:` — 数式を計算します。例：`/calculate expression:(12 + 5) * 3`
+- `/percentage value: percent:` — 指定した割合を計算します。例：`/percentage value:200 percent:15`
+- `/convert value: from: to:` — 長さ・質量・体積・温度の単位を変換します。
+- `/statistics numbers:` — カンマ区切りの数値から合計・平均・中央値などを計算します。例：`/statistics numbers:10,20,30`
+
+これらの専用コマンドではJSONを入力する必要はありません。詳細な関数操作には引き続き `/function list`・`/function info`・`/function run` を使用できます。
+
+## D1保存データの暗号化
+
+会話履歴、Web検索コンテキスト、ユーザーが明示的に保存した記憶の本文は、Worker内でAES-256-GCMにより暗号化してからD1へ保存します。暗号化キーはD1とは別にCloudflare Worker Secret `D1_DATA_ENCRYPTION_KEY` として保管してください。
+
+キーは32バイトのランダム値をBase64化したものです。例：
+
+```bash
+openssl rand -base64 32
+npx wrangler secret put D1_DATA_ENCRYPTION_KEY
+```
+
+生成した値をSecretの入力欄に貼り付けます。キーをソースコード、wrangler.toml、GitHub、Discord、チャットに書き込まないでください。OAuth用の `OAUTH_TOKEN_ENCRYPTION_KEY` とは別のキーを使用します。
+
+暗号化済みデータには `enc:v1:` の形式識別子が付きます。既存の平文データは読み込まれた際にも暗号化して同じ行を更新します。全件を移行する場合は、D1のバックアップを取得してから、認証付きのバッチ移行エンドポイントを使用してください。
+
+D1のバックアップを暗号化キーとは別に安全な場所へ保管してください。キーを失うと暗号化済みの会話履歴・記憶は復号できません。キーを変更する場合は、旧キーで復号して新キーで再暗号化するローテーション作業が必要です。現在の暗号化形式はバージョン付きで、将来の形式変更に対応できるようにしています。
+
+ユーザー設定（言語・応答スタイル・記憶機能の有効/無効）や使用量集計は機密本文ではないため、現時点では検索・集計可能な平文のままです。DiscordユーザーID、会話ID、時刻などのメタデータも暗号化対象外です。
+
+### 既存D1データの一括暗号化
+
+1. D1のバックアップを取得します。
+2. `D1_DATA_ENCRYPTION_KEY` と、別のランダム値で生成した `D1_MIGRATION_SECRET` をWorker Secretに登録します。
+3. 暗号化コードをデプロイします。
+4. 次のリクエストを実行します。URLは実際のWorkerドメインに置き換えてください。
+
+```bash
+curl -X POST "https://<worker-domain>/admin/encrypt-d1" \
+  -H "Authorization: Bearer <D1_MIGRATION_SECRET>" \
+  -H "Content-Type: application/json" \
+  -d '{"afterMessageId":0,"afterMemoryId":0,"batchSize":25}'
+```
+
+応答の `messages.nextId` と `memories.nextId` を次のリクエストの `afterMessageId` と `afterMemoryId` にそれぞれ渡し、両方の `done` が `true` になるまで繰り返します。1回あたりの処理は最大50行ずつに制限されています。処理を中断した場合も、最後に返されたIDから再開できます。
+
+移行完了後は `D1_MIGRATION_SECRET` をCloudflareから削除してください。移行用エンドポイントはSecretによるBearer認証で保護されていますが、移行作業中だけ有効にする運用を推奨します。移行後、必要な場合に再度実行しても、暗号化済みの行はスキップされます。

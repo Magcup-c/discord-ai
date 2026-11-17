@@ -6,17 +6,17 @@ function toBase64Url(bytes) {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-function fromBase64(value) {
+function fromBase64(value, secretName) {
   if (typeof value !== "string" || !/^[A-Za-z0-9+/]+={0,2}$/.test(value)) {
-    throw new Error("OAUTH_TOKEN_ENCRYPTION_KEY must be a base64-encoded 32-byte key");
+    throw new Error(`${secretName} must be a base64-encoded 32-byte key`);
   }
   const binary = atob(value);
   return Uint8Array.from(binary, char => char.charCodeAt(0));
 }
 
-async function encryptionKey(env) {
-  const raw = fromBase64(env.OAUTH_TOKEN_ENCRYPTION_KEY);
-  if (raw.length !== 32) throw new Error("OAUTH_TOKEN_ENCRYPTION_KEY must decode to exactly 32 bytes");
+async function encryptionKey(env, secretName = "OAUTH_TOKEN_ENCRYPTION_KEY") {
+  const raw = fromBase64(env[secretName], secretName);
+  if (raw.length !== 32) throw new Error(`${secretName} must decode to exactly 32 bytes`);
   return crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt", "decrypt"]);
 }
 
@@ -40,6 +40,33 @@ export async function encryptSecret(value, env) {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoder.encode(value));
   return `${toBase64Url(iv)}.${toBase64Url(new Uint8Array(ciphertext))}`;
+}
+
+export async function encryptData(value, env) {
+  if (typeof value !== "string" || !value) return null;
+  const key = await encryptionKey(env, "D1_DATA_ENCRYPTION_KEY");
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoder.encode(value));
+  return `enc:v1:${toBase64Url(iv)}.${toBase64Url(new Uint8Array(ciphertext))}`;
+}
+
+export async function decryptData(payload, env) {
+  if (typeof payload !== "string" || !payload) return null;
+  if (!payload.startsWith("enc:v1:")) return payload; // Legacy plaintext; callers migrate it on read.
+  const encrypted = payload.slice("enc:v1:".length);
+  const [ivPart, ciphertextPart, extra] = encrypted.split(".");
+  if (!ivPart || !ciphertextPart || extra) throw new Error("Invalid encrypted D1 value");
+  const decode = part => {
+    const normalized = part.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized + "=".repeat((4 - normalized.length % 4) % 4);
+    const binary = atob(padded);
+    return Uint8Array.from(binary, char => char.charCodeAt(0));
+  };
+  const iv = decode(ivPart);
+  if (iv.length !== 12) throw new Error("Invalid encrypted D1 IV");
+  const key = await encryptionKey(env, "D1_DATA_ENCRYPTION_KEY");
+  const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, decode(ciphertextPart));
+  return new TextDecoder().decode(plaintext);
 }
 
 export async function decryptSecret(payload, env) {
