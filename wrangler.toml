@@ -9,8 +9,9 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "discord-ai-db"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "92d5d219-bd09-4985-9763-0222034145dd"
 migrations_dir = "src/database/migrations"
 
 [vars]
 GROQ_MODEL = "openai/gpt-oss-20b"
+GAS_SHARED_NAME = "共有GAS"
