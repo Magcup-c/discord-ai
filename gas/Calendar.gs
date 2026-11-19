@@ -32,6 +32,6 @@ function eventSummary_(event) {
   return {
     id: event.getId(), title: event.getTitle(), description: event.getDescription().slice(0, 2000),
     location: event.getLocation(), start: event.getStartTime().toISOString(),
-    end: event.getEndTime().toISOString(), url: event.getHtmlLink()
+    end: event.getEndTime().toISOString()
   };
 }
