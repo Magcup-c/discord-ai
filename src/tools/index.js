@@ -1,4 +1,5 @@
 import { registerTool } from "../core/tool-registry.js";
+import { registerGasReadTools } from "./gas/read.js";
 import { getWeather } from "./weather.js";
 import { searchWeb } from "./web-search.js";
 import { calculate } from "./calculator.js";
@@ -212,3 +213,7 @@ registerTool({
     }
   }
 }, dateDifference);
+
+
+// Read-only GAS tools are registered alongside built-in tools.
+registerGasReadTools(registerTool);
