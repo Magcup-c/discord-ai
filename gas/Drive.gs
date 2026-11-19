@@ -32,10 +32,16 @@ function driveRead_(p) {
     text = DocumentApp.openById(file.getId()).getBody().getText();
   } else if (mime === MimeType.GOOGLE_SHEETS) {
     var ss = SpreadsheetApp.openById(file.getId());
-    text = ss.getSheets().map(function(sheet) {
-      return "[" + sheet.getName() + "]\n" + sheet.getDataRange().getDisplayValues()
-        .map(function(row) { return row.join("\t"); }).join("\n");
-    }).join("\n\n");
+    var pieces = [];
+    var totalCells = 0;
+    ss.getSheets().forEach(function(sheet) {
+      var range = sheet.getDataRange();
+      totalCells += range.getNumRows() * range.getNumColumns();
+      if (totalCells > 100000) throw new Error("Range too large");
+      pieces.push("[" + sheet.getName() + "]\n" + range.getDisplayValues()
+        .map(function(row) { return row.join("\t"); }).join("\n"));
+    });
+    text = pieces.join("\n\n");
   } else if (mime === MimeType.PLAIN_TEXT || mime === "text/csv" || mime === "application/json") {
     text = file.getBlob().getDataAsString("UTF-8");
   } else {
