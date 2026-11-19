@@ -19,7 +19,10 @@ const MAX_PROMPT_LENGTH = 1500;
 const ALLOWED_TOOLS = [
   "get_weather", "web_search", "calculate", "google_search",
   "percentage", "statistics", "unit_convert", "json_format",
-  "json_validate", "csv_parse", "csv_to_json", "date_difference"
+  "json_validate", "csv_parse", "csv_to_json", "date_difference",
+  "gas_sheets_read", "gas_sheets_search", "gas_sheets_info",
+  "gas_drive_search", "gas_drive_info", "gas_drive_read",
+  "gas_calendar_list", "gas_calendar_search"
 ];
 const FUNCTION_TOOLS = [
   "calculate", "percentage", "statistics", "unit_convert",
