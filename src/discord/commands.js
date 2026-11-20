@@ -86,6 +86,11 @@ function formatSettings(settings) {
   ].join("\n");
 }
 
+export function formatToolList(definitions) {
+  const names = definitions.map(item => item.function.name);
+  return ["**使用可能なツール（全" + names.length + "件）**", ...names.map(name => `• ${name}`)].join("\n");
+}
+
 export async function handleApplicationCommand(interaction, env) {
   const command = interaction.data?.name;
   const userId = interaction.member?.user?.id || interaction.user?.id;
@@ -433,9 +438,7 @@ export async function handleApplicationCommand(interaction, env) {
   if (command === "tools") {
     const definitions = getToolDefinitions(ALLOWED_TOOLS);
     if (!definitions.length) return "現在利用可能なツールはありません。";
-    return ["**使用可能なツール**", ...definitions.map(item =>
-      `• **${item.function.name}**：${item.function.description}`
-    )].join("\n").slice(0, 1900);
+    return formatToolList(definitions);
   }
 
   if (command === "search") {
